@@ -287,14 +287,19 @@
 <!-- ========================================== -->
 {% for fb in feedbacks %}
 <div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
+    <!-- THÊM modal-fullscreen-sm-down và modal-dialog-scrollable ĐỂ CỐ ĐỊNH NÚT LƯU -->
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
-                <div class="modal-header bg-primary text-white">
+        <div class="modal-content" style="max-height: 90vh;">
+            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST" class="d-flex flex-column h-100 mb-0">
+                
+                <!-- HEADER (CỐ ĐỊNH Ở ĐỈNH) -->
+                <div class="modal-header bg-primary text-white flex-shrink-0">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+
+                <!-- BODY (CHO PHÉP CUỘN BÊN TRONG) -->
+                <div class="modal-body overflow-auto">
                     <!-- THÔNG TIN NGƯỜI GỬI -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -321,7 +326,7 @@
                         <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
                     </div>
 
-                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM (ẢNH VÀ VIDEO) -->
+                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM -->
                     <div class="mb-3">
                         <label class="form-label fw-bold d-block">Tệp đính kèm (Ảnh / Video minh chứng):</label>
                         
@@ -357,7 +362,7 @@
                         {% elif fb.image %}
                             <div class="mt-1">
                                 <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px; object-fit: contain;" alt="Hình ảnh đính kèm">
+                                    <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 180px; object-fit: contain;" alt="Hình ảnh đính kèm">
                                 </a>
                             </div>
                         {% else %}
@@ -382,9 +387,11 @@
                         <textarea name="response_content" class="form-control" rows="3" placeholder="Nhập nội dung kết quả xử lý hoặc hướng giải quyết...">{{ fb.response_content or '' }}</textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-success fw-bold">Lưu thay đổi</button>
+
+                <!-- FOOTER DỨA BẤM (LUÔN CỐ ĐỊNH Ở ĐÁY, KHÔNG BỊ TRÀN NHƯ TRONG ẢNH) -->
+                <div class="modal-footer bg-light flex-shrink-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi</button>
                 </div>
             </form>
         </div>

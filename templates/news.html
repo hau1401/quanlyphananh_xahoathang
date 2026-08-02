@@ -10,10 +10,9 @@
     </div>
 </div>
 
-<!-- Tin nổi bật -->
+<!-- TIN NỔI BẬT -->
 <div class="card shadow-sm border-0 mb-5 overflow-hidden">
     <div class="row g-0">
-        <!-- Khung chứa ảnh (Đã sửa lại thẻ <img> chuẩn) -->
         <div class="col-md-6">
             <img src="{{ url_for('static', filename='image/news1.jpg') }}" 
                  class="img-fluid rounded-start h-100 w-100" 
@@ -30,15 +29,18 @@
                 </p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <small class="text-muted">📅 01/08/2026</small>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Đọc tiếp</a>
+                    <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalNewsFeatured">
+                        Đọc tiếp
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Danh sách tin tức -->
+<!-- DANH SÁCH TIN TỨC -->
 <div class="row g-4">
+    <!-- Bài 1 -->
     <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body">
@@ -50,11 +52,14 @@
             </div>
             <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
                 <small class="text-muted">📅 28/07/2026</small>
-                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#modalNews1">
+                    Chi tiết &rarr;
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Bài 2 -->
     <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body">
@@ -66,11 +71,14 @@
             </div>
             <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
                 <small class="text-muted">📅 25/07/2026</small>
-                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#modalNews2">
+                    Chi tiết &rarr;
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Bài 3 -->
     <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body">
@@ -82,7 +90,99 @@
             </div>
             <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
                 <small class="text-muted">📅 20/07/2026</small>
-                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#modalNews3">
+                    Chi tiết &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- KHUNG POPUP MODAL ĐỌC CHI TIẾT TỪNG BÀI VIẾT -->
+<!-- ========================================== -->
+
+<!-- Modal Tin nổi bật -->
+<div class="modal fade" id="modalNewsFeatured" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Kế hoạch triển khai dịch vụ công trực tuyến năm 2026</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3 text-muted">📅 Ngày đăng: 01/08/2026 | Danh mục: <span class="badge bg-danger">Thông báo quan trọng</span></div>
+                <img src="{{ url_for('static', filename='image/news1.jpg') }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Tin nổi bật">
+                <p class="fw-bold fs-6">UBND xã Hòa Thắng thông báo đẩy mạnh tiếp nhận hồ sơ và trả kết quả thủ tục hành chính qua cổng dịch vụ công quốc gia năm 2026.</p>
+                <p>Nhằm nâng cao chất lượng phục vụ người dân và doanh nghiệp, UBND xã Hòa Thắng triển khai tiếp nhận 100% thủ tục hành chính đủ điều kiện lên Dịch vụ công trực tuyến toàn trình.</p>
+                <p>Người dân có thể truy cập cổng Dịch vụ công Quốc gia hoặc liên hệ Bộ phận Một cửa xã Hòa Thắng để được bộ phận cán bộ hỗ trợ và hướng dẫn chi tiết.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tin 1 -->
+<div class="modal fade" id="modalNews1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Tuyên truyền công tác an toàn giao thông trên địa bàn xã</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3 text-muted">📅 Ngày đăng: 28/07/2026 | Danh mục: <span class="badge bg-primary">Hoạt động địa phương</span></div>
+                <p>Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ cho học sinh và bà con nhân dân trên địa bàn.</p>
+                <p>Buổi tuyên truyền tập trung phổ biến các quy định về việc chấp hành đội mũ bảo hiểm, không sử dụng rượu bia khi tham gia giao thông và chú ý quan sát tại các điểm giao cắt giao thông trọng điểm.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tin 2 -->
+<div class="modal fade" id="modalNews2" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Cập nhật lịch tiếp công dân định kỳ của Chủ tịch UBND xã</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3 text-muted">📅 Ngày đăng: 25/07/2026 | Danh mục: <span class="badge bg-success">Cải cách hành chính</span></div>
+                <p>UBND xã Hòa Thắng trân trọng thông báo lịch tiếp công dân định kỳ của Chủ tịch UBND xã như sau:</p>
+                <ul>
+                    <li><strong>Thời gian:</strong> Thứ Năm hàng tuần (Sáng: 7h30 - 11h30, Chiều: 13h30 - 17h00).</li>
+                    <li><strong>Địa điểm:</strong> Phòng Tiếp công dân - Trụ sở UBND xã Hòa Thắng.</li>
+                </ul>
+                <p>Các ý kiến, kiến nghị của công dân sẽ được ghi nhận và chỉ đạo giải quyết trực tiếp.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tin 3 -->
+<div class="modal fade" id="modalNews3" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Hướng dẫn phòng trừ sâu bệnh mùa mưa cho cây trồng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3 text-muted">📅 Ngày đăng: 20/07/2026 | Danh mục: <span class="badge bg-warning text-dark">Khuyến nông</span></div>
+                <p>Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp trong mùa mưa lũ.</p>
+                <p>Ban Khuyến nông xã khuyến nghị bà con khơi thông rãnh thoát nước, tỉa cành tạo độ thông thoáng và phun phòng trừ các loại nấm bệnh phát sinh sau mưa lớn.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>

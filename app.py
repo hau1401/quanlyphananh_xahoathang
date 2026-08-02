@@ -30,6 +30,7 @@ with app.app_context():
         # Nếu đã có sẵn thì cập nhật lại mật khẩu và quyền admin
         admin_user.password = "123456@"
         admin_user.role = "admin"
+        
     # 2. Khởi tạo danh mục mặc định nếu chưa có
     if Category.query.count() == 0:
         default_categories = [

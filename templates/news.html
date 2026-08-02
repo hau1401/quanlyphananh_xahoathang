@@ -45,10 +45,19 @@
 {% endif %}
 
 <!-- DANH SÁCH TIN TỨC KHÁC -->
+<!-- DANH SÁCH TIN TỨC KHÁC -->
 <div class="row g-4">
     {% for news in other_news %}
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0">
+        <div class="card h-100 shadow-sm border-0 overflow-hidden">
+            <!-- 🖼️ BỔ SUNG THẺ ẢNH Ở ĐÂY -->
+            {% if news.image %}
+                <img src="{{ url_for('static', filename='uploads/' + news.image) if 'news_' in news.image else url_for('static', filename='image/' + news.image) }}" 
+                     class="card-img-top" 
+                     style="height: 180px; object-fit: cover;" 
+                     alt="{{ news.title }}">
+            {% endif %}
+
             <div class="card-body">
                 <span class="badge bg-primary mb-2">{{ news.category }}</span>
                 <h5 class="card-title fw-bold">{{ news.title }}</h5>

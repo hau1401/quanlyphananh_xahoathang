@@ -30,7 +30,21 @@ with app.app_context():
         # Nếu đã có sẵn thì cập nhật lại mật khẩu và quyền admin
         admin_user.password = "123456@"
         admin_user.role = "admin"
-        
+    # 2. Khởi tạo danh mục mặc định nếu chưa có
+    if Category.query.count() == 0:
+        default_categories = [
+            "Giao thông - Hạ tầng",
+            "Môi trường - Rác thải",
+            "An ninh - Trật tự",
+            "Thủ tục hành chính",
+            "Đất đai - Xây dựng",
+            "Y tế - Dịch vụ công",
+            "Giáo dục - Văn hóa",
+            "Lĩnh vực khác"
+        ]
+        for cat_name in default_categories:
+            db.session.add(Category(name=cat_name))
+
     db.session.commit()
 
 # 🔥 XÁC ĐỊNH CHÍNH XÁC VỊ TRÍ THƯ MỤC UPLOAD ẢNH

@@ -6,6 +6,22 @@
 <!-- Nhúng thư viện SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<style>
+  /* Fix lỗi bị đơ, treo cuộn trang trên giao diện di động khi bật Modal */
+  body.modal-open {
+    overflow: hidden !important;
+  }
+  .modal {
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-backdrop {
+    z-index: 1040 !important;
+  }
+  .modal {
+    z-index: 1050 !important;
+  }
+</style>
+
 <div class="container-fluid py-2">
 
     <!-- TIÊU ĐỀ TRANG DASHBOARD -->
@@ -83,7 +99,7 @@
             </button>
         </li>
     </ul>
-
+    
     <!-- NỘI DUNG CÁC TAB -->
     <div class="tab-content bg-white p-3 rounded shadow-sm border" id="adminTabContent">
         
@@ -150,77 +166,6 @@
                                         </button>
                                     </form>
                                 </div>
-
-                                <!-- MODAL CHI TIẾT & CẬP NHẬT PHẢN ÁNH -->
-                                <div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
-                                                <div class="modal-header bg-primary text-white">
-                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <!-- THÔNG TIN NGƯỜI GỬI -->
-                                                    <div class="row g-3 mb-3">
-                                                        <div class="col-md-6">
-                                                            <p class="mb-1"><strong>Người gửi:</strong> {{ fb.fullname }}</p>
-                                                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ fb.phone }}</p>
-                                                            <p class="mb-1"><strong>Email:</strong> {{ fb.email or 'Không có' }}</p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <p class="mb-1"><strong>Địa chỉ:</strong> {{ fb.address or 'Không cung cấp' }}</p>
-                                                            <p class="mb-1"><strong>Mã phản ánh:</strong> <span class="text-primary fw-bold">{{ fb.feedback_code }}</span></p>
-                                                        </div>
-                                                    </div>
-                                                    <hr>
-                                                    
-                                                    <!-- NỘI DUNG PHẢN ÁNH -->
-                                                    <div class="mb-3">
-                                                        <h6 class="fw-bold text-dark">Tiêu đề: {{ fb.title }}</h6>
-                                                        <label class="form-label fw-bold">Nội dung phản ánh đầy đủ:</label>
-                                                        <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
-                                                    </div>
-
-                                                    <!-- HIỂN THỊ HÌNH ẢNH TRONG MODAL -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold d-block">Hình ảnh đính kèm:</label>
-                                                        {% if fb.image %}
-                                                            <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
-                                                                <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;" alt="Hình ảnh đính kèm">
-                                                            </a>
-                                                            <small class="d-block text-muted mt-1">(Nhấp vào ảnh để mở xem kích thước đầy đủ)</small>
-                                                        {% else %}
-                                                            <p class="text-muted fst-italic mb-0">Người dân không gửi kèm hình ảnh.</p>
-                                                        {% endif %}
-                                                    </div>
-                                                    <hr>
-
-                                                    <!-- FORM CẬP NHẬT CỦA ADMIN -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold">Trạng thái xử lý:</label>
-                                                        <select name="status" class="form-select">
-                                                            <option value="Đã tiếp nhận" {% if fb.status == 'Đã tiếp nhận' %}selected{% endif %}>Đã tiếp nhận</option>
-                                                            <option value="Đang xử lý" {% if fb.status == 'Đang xử lý' %}selected{% endif %}>Đang xử lý</option>
-                                                            <option value="Đã xử lý" {% if fb.status == 'Đã xử lý' %}selected{% endif %}>Đã xử lý (Hoàn thành)</option>
-                                                            <option value="Từ chối" {% if fb.status == 'Từ chối' %}selected{% endif %}>Từ chối xử lý</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold">Nội dung phản hồi từ chính quyền:</label>
-                                                        <textarea name="response_content" class="form-control" rows="3" placeholder="Nhập nội dung kết quả xử lý hoặc hướng giải quyết...">{{ fb.response_content or '' }}</textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                                    <button type="submit" class="btn btn-success fw-bold">Lưu thay đổi</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </td>
                         </tr>
                         {% else %}
@@ -329,7 +274,81 @@
     </div>
 </div>
 
-<!-- JAVASCRIPT XỬ LÝ SWEETALERT2 -->
+<!-- ========================================== -->
+<!-- DANH SÁCH MODAL (ĐẶT NGOÀI TABLE ĐỂ DỄ BẤM TRÊN DI ĐỘNG) -->
+<!-- ========================================== -->
+{% for fb in feedbacks %}
+<div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- THÔNG TIN NGƯỜI GỬI -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Người gửi:</strong> {{ fb.fullname }}</p>
+                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ fb.phone }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ fb.email or 'Không có' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Địa chỉ:</strong> {{ fb.address or 'Không cung cấp' }}</p>
+                            <p class="mb-1"><strong>Mã phản ánh:</strong> <span class="text-primary fw-bold">{{ fb.feedback_code }}</span></p>
+                        </div>
+                    </div>
+                    <hr>
+                    
+                    <!-- NỘI DUNG PHẢN ÁNH -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-dark">Tiêu đề: {{ fb.title }}</h6>
+                        <label class="form-label fw-bold">Nội dung phản ánh đầy đủ:</label>
+                        <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
+                    </div>
+
+                    <!-- HIỂN THỊ HÌNH ẢNH TRONG MODAL -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold d-block">Hình ảnh đính kèm:</label>
+                        {% if fb.image %}
+                            <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px; width: 100%; object-fit: contain;" alt="Hình ảnh đính kèm">
+                            </a>
+                            <small class="d-block text-muted mt-1">(Nhấp vào ảnh để mở xem kích thước đầy đủ)</small>
+                        {% else %}
+                            <p class="text-muted fst-italic mb-0">Người dân không gửi kèm hình ảnh.</p>
+                        {% endif %}
+                    </div>
+                    <hr>
+
+                    <!-- FORM CẬP NHẬT CỦA ADMIN -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái xử lý:</label>
+                        <select name="status" class="form-select">
+                            <option value="Đã tiếp nhận" {% if fb.status == 'Đã tiếp nhận' %}selected{% endif %}>Đã tiếp nhận</option>
+                            <option value="Đang xử lý" {% if fb.status == 'Đang xử lý' %}selected{% endif %}>Đang xử lý</option>
+                            <option value="Đã xử lý" {% if fb.status == 'Đã xử lý' %}selected{% endif %}>Đã xử lý (Hoàn thành)</option>
+                            <option value="Từ chối" {% if fb.status == 'Từ chối' %}selected{% endif %}>Từ chối xử lý</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nội dung phản hồi từ chính quyền:</label>
+                        <textarea name="response_content" class="form-control" rows="3" placeholder="Nhập nội dung kết quả xử lý hoặc hướng giải quyết...">{{ fb.response_content or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success fw-bold">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- JAVASCRIPT XỬ LÝ SWEETALERT2 VÀ MODAL TỐI ƯU CHO DI ĐỘNG -->
 <script>
 function confirmDelete(formId, itemTypeName) {
     Swal.fire({
@@ -353,5 +372,18 @@ function confirmDelete(formId, itemTypeName) {
         }
     });
 }
+
+// Xử lý dọn dẹp các lớp mờ bị treo trên giao diện di động khi đóng Modal
+document.addEventListener('DOMContentLoaded', function () {
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function (modal) {
+        modal.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '';
+        });
+    });
+});
 </script>
 {% endblock %}

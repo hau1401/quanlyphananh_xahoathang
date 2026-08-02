@@ -13,17 +13,18 @@ app.config.from_object(Config)
 
 # 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHỦ TẮT TRÌNH DUYỆT
 app.config["SESSION_PERMANENT"] = False
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)  # Tự hết hạn sau 30 phút nếu không thao tác
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+
+# 🔥 GIỚI HẠN DUNG LƯỢNG FILE TẢI LÊN (75MB Max Request)
+app.config['MAX_CONTENT_LENGTH'] = 75 * 1024 * 1024 
 
 db.init_app(app)
 
-# 🔥 TỰ ĐỘNG TẠO BẢNG & TẠO/CẬP NHẬT TÀI KHOẢN ADMIN
 with app.app_context():
     db.create_all()
     
     admin_user = User.query.filter_by(username="admin").first()
     if not admin_user:
-        # Nếu chưa có thì tạo mới
         admin_user = User(
             fullname="Quản Trị Viên Xã",
             username="admin",
@@ -32,11 +33,9 @@ with app.app_context():
         )
         db.session.add(admin_user)
     else:
-        # Nếu đã có sẵn thì cập nhật lại mật khẩu và quyền admin
         admin_user.password = "123456@"
         admin_user.role = "admin"
         
-    # Khởi tạo danh mục mặc định nếu chưa có
     if Category.query.count() == 0:
         default_categories = [
             "Giao thông - Hạ tầng",
@@ -53,22 +52,24 @@ with app.app_context():
 
     db.session.commit()
 
-# 🔥 XÁC ĐỊNH CHÍNH XÁC VỊ TRÍ THƯ MỤC UPLOAD ẢNH
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# Các đuôi file cho phép
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mkv'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ==========================================
 # DECORATORS BẢO MẬT & PHÂN QUYỀN
 # ==========================================
 
-# Làm mới thời gian hết hạn session khi có tương tác
 @app.before_request
 def make_session_non_permanent():
     session.modified = True
 
-# 1. Kiểm tra đăng nhập bắt buộc
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -78,8 +79,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
-# 2. Kiểm tra quyền Admin bắt buộc
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -92,12 +91,10 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
 def generate_feedback_code():
     year = datetime.now().year
     number = random.randint(1000, 9999)
     return f"HT{year}{number}"
-
 
 # ==========================================
 # 1. TRANG CHỦ, GÓP Ý & TRA CỨU
@@ -130,20 +127,32 @@ def feedback():
     if request.method == "POST":
         phone = request.form.get("phone", "").strip()
 
-        # 🔥 Bắt buộc số điện thoại chỉ chứa chữ số và có độ dài từ 10-11 số
         if not phone.isdigit() or not (10 <= len(phone) <= 11):
             flash("Số điện thoại không hợp lệ! Vui lòng chỉ nhập từ 10 đến 11 chữ số.", "danger")
             return render_template("feedback.html", categories=categories)
 
-        filename = ""
-        if "image" in request.files:
-            file = request.files["image"]
-            if file and file.filename != "":
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-                file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-                file.save(file_path)
+        # 🔥 XỬ LÝ LƯU NHIỀU FILE (ẢNH & VIDEO)
+        uploaded_files = request.files.getlist("media_files")
+        saved_filenames = []
 
-        # Trích xuất latitude & longitude từ form
+        if len(uploaded_files) > 5:
+            flash("Chỉ được gửi tối đa 5 tệp đính kèm!", "danger")
+            return render_template("feedback.html", categories=categories)
+
+        for file in uploaded_files:
+            if file and file.filename != "":
+                if allowed_file(file.filename):
+                    filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100,999)}_{file.filename}")
+                    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                    file.save(file_path)
+                    saved_filenames.append(filename)
+                else:
+                    flash(f"Tệp '{file.filename}' không đúng định dạng cho phép (Ảnh: PNG, JPG, GIF | Video: MP4, MOV, AVI)!", "danger")
+                    return render_template("feedback.html", categories=categories)
+
+        # Ghép danh sách tên file bằng dấu phẩy
+        media_files_str = ",".join(saved_filenames) if saved_filenames else None
+
         lat_val = request.form.get("latitude")
         lng_val = request.form.get("longitude")
 
@@ -158,7 +167,7 @@ def feedback():
             category_id=request.form["category"],
             title=request.form["title"],
             content=request.form["content"],
-            image=filename,
+            media_files=media_files_str,
             status="Đã tiếp nhận"
         )
 
@@ -168,6 +177,19 @@ def feedback():
         return render_template("success.html", code=fb_item.feedback_code)
 
     return render_template("feedback.html", categories=categories)
+
+
+@app.route("/search", methods=["GET", "POST"])
+@login_required
+def search():
+    fb_item = None
+    if request.method == "POST":
+        code = request.form.get("code")
+        fb_item = Feedback.query.filter_by(feedback_code=code).first()
+
+    return render_template("search.html", feedback=fb_item)
+
+# (Các route còn lại đăng nhập, admin,... giữ nguyên như cũ)
 
 
 @app.route("/search", methods=["GET", "POST"])

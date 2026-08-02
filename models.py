@@ -25,10 +25,18 @@ class Feedback(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100))
     address = db.Column(db.String(200))
+    
+    # 📍 Tọa độ bản đồ Google Maps / OpenStreetMap
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    image = db.Column(db.String(255))
+    
+    # 🎥 🖼️ Lưu danh sách file (ảnh/video) phân cách bằng dấu phẩy
+    media_files = db.Column(db.Text, nullable=True)
+    
     status = db.Column(db.String(50), default="Đã tiếp nhận")
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 

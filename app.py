@@ -16,6 +16,21 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+
+with app.app_context():
+    db.create_all()
+    # Tạo tài khoản Admin mặc định nếu chưa tồn tại
+    if not User.query.filter_by(username="admin").first():
+        admin_user = User(
+            fullname="Quản Trị Viên Xã",
+            username="admin",
+            password="123456@",  # Bạn nhớ đổi mật khẩu này sau
+            role="admin"
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+
+
 # 🔥 XÁC ĐỊNH CHÍNH XÁC VỊ TRÍ THƯ MỤC UPLOAD ẢNH
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

@@ -464,32 +464,98 @@
 
 <!-- JAVASCRIPT XỬ LÝ SWEETALERT2, LEAFLET MAP, EXCEL & REALTIME -->
 <script>
-// HÀM XUẤT BÁO CÁO EXCEL TRỰC TIẾP TỪ BẢNG
+// HÀM XUẤT BÁO CÁO EXCEL CHUYÊN NGHIỆP & ĐẸP MẮT
 function exportToExcel() {
-    let originalTable = document.getElementById('feedbackTable');
-    let cloneTable = originalTable.cloneNode(true);
+    let excelData = [];
 
-    // Loại bỏ cột "Hành động" (Cột cuối cùng) khi xuất ra Excel
-    for (let row of cloneTable.rows) {
-        if (row.cells.length > 0) {
-            row.deleteCell(-1); 
-        }
-    }
-
-    // Tạo file Excel từ dữ liệu bảng đã lược bỏ cột nút
-    let wb = XLSX.utils.table_to_book(cloneTable, { sheet: "Danh_Sach_Phan_Anh" });
+    // 1. DÒNG TIÊU ĐỀ BÁO CÁO HÀNH CHÍNH
+    excelData.push(["ỦY BÀN NHÂN DÂN XÃ HÒA THẮNG"]);
+    excelData.push(["HỆ THỐNG TIẾP NHẬN & XỬ LÝ PHẢN ÁNH KIẾN NGHỊ"]);
+    excelData.push([""]); // Dòng trống
+    excelData.push(["BÁO CÁO DANH SÁCH PHẢN ÁNH KIẾN NGHỊ CỦA NHÂN DÂN"]);
     
-    // Đặt tên file theo ngày tháng hiện tại
-    let today = new Date().toISOString().slice(0, 10);
-    let fileName = `Bao_Cao_Phan_Anh_UBND_Hoa_Thang_${today}.xlsx`;
+    let now = new Date();
+    let dateStr = `Ngày xuất báo cáo: ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}`;
+    excelData.push([dateStr]);
+    excelData.push([""]); // Dòng trống
 
-    XLSX.writeFile(wb, fileName);
+    // 2. HEADER CÁC CỘT DỮ LIỆU (TÁCH BIỆT RÕ RÀNG)
+    excelData.push([
+        "STT", 
+        "Mã PA", 
+        "Người gửi", 
+        "Số điện thoại", 
+        "Tiêu đề phản ánh", 
+        "Nội dung phản ánh", 
+        "Số tệp đính kèm", 
+        "Trạng thái xử lý"
+    ]);
 
+    // 3. DUYỆT BẢNG LẤY DỮ LIỆU
+    let rows = document.querySelectorAll('#feedbackTable tbody tr');
+    let stt = 1;
+
+    rows.forEach(row => {
+        // Bỏ qua dòng trống nếu không có dữ liệu
+        if (row.cells.length <= 1) return;
+
+        // Lấy dữ liệu từng cột và làm sạch
+        let code = row.cells[0]?.innerText.trim() || '';
+        
+        // Cột người gửi: Tách tên và SĐT
+        let senderDiv = row.cells[1];
+        let name = senderDiv?.querySelector('strong')?.innerText.trim() || '';
+        let phone = senderDiv?.querySelector('small')?.innerText.trim() || '';
+
+        // Cột Tiêu đề & Nội dung
+        let contentDiv = row.cells[2];
+        let title = contentDiv?.querySelector('div')?.innerText.trim() || '';
+        let content = contentDiv?.querySelector('small')?.innerText.trim() || '';
+
+        // Đính kèm & Trạng thái
+        let attachments = row.cells[3]?.innerText.trim() || 'Không';
+        let status = row.cells[4]?.innerText.trim() || '';
+
+        excelData.push([
+            stt++,
+            code,
+            name,
+            phone,
+            title,
+            content,
+            attachments,
+            status
+        ]);
+    });
+
+    // 4. TẠO WORKBOOK VÀ SHEET
+    let ws = XLSX.utils.aoa_to_sheet(excelData);
+
+    // 5. CẤU HÌNH ĐỘ RỘNG CHO CÁC CỘT (ĐỂ KHÔNG BỊ BÓP MẤT CHỮ)
+    ws['!cols'] = [
+        { wch: 6 },  // STT
+        { wch: 15 }, // Mã PA
+        { wch: 22 }, // Người gửi
+        { wch: 14 }, // Số điện thoại
+        { wch: 30 }, // Tiêu đề
+        { wch: 45 }, // Nội dung
+        { wch: 16 }, // Đính kèm
+        { wch: 18 }  // Trạng thái
+    ];
+
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach_Phan_Anh");
+
+    // 6. TẢI FILE EXCEL VỀ MÁY
+    let today = now.toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Bao_Cao_Phan_Anh_UBND_Hoa_Thang_${today}.xlsx`);
+
+    // Thông báo cho người dùng
     Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'success',
-        title: 'Tải file Excel thành công!',
+        title: 'Đã xuất file Excel báo cáo đẹp mắt!',
         showConfirmButton: false,
         timer: 2500
     });

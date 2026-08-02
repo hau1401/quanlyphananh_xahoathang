@@ -11,6 +11,14 @@ from models import db, Category, Feedback, User, News
 
 app = Flask(__name__)
 app.config.from_object(Config)
+# 🛠️ Ưu tiên kết nối PostgreSQL trên Render
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    # Render cấp URL chuẩn "postgres://", SQLAlchemy yêu cầu "postgresql://"
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+
 
 # 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHI TẮT TRÌNH DUYỆT
 app.config["SESSION_PERMANENT"] = False

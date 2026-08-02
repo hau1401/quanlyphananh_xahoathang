@@ -12,24 +12,26 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
-# 🔥 TỰ ĐỘNG TẠO BẢNG CSDL (Cần thiết khi triển khai trên Render / SQLite)
+# 🔥 TỰ ĐỘNG TẠO BẢNG & TẠO/CẬP NHẬT TÀI KHOẢN ADMIN
 with app.app_context():
     db.create_all()
-
-
-with app.app_context():
-    db.create_all()
-    # Tạo tài khoản Admin mặc định nếu chưa tồn tại
-    if not User.query.filter_by(username="admin").first():
+    
+    admin_user = User.query.filter_by(username="admin").first()
+    if not admin_user:
+        # Nếu chưa có thì tạo mới
         admin_user = User(
             fullname="Quản Trị Viên Xã",
             username="admin",
-            password="123456@",  # Bạn nhớ đổi mật khẩu này sau
+            password="123456@",
             role="admin"
         )
         db.session.add(admin_user)
-        db.session.commit()
-
+    else:
+        # Nếu đã có sẵn thì cập nhật lại mật khẩu và quyền admin
+        admin_user.password = "123456@"
+        admin_user.role = "admin"
+        
+    db.session.commit()
 
 # 🔥 XÁC ĐỊNH CHÍNH XÁC VỊ TRÍ THƯ MỤC UPLOAD ẢNH
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")

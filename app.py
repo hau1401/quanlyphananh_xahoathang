@@ -516,6 +516,12 @@ def reset_password():
 
     return render_template("reset_password.html")
 
+@app.route('/api/check-new-feedbacks')
+def check_new_feedbacks():
+    # Đếm tổng số phản ánh trong CSDL
+    total = Feedback.query.count()  # Hoặc câu lệnh SQL count tương ứng dự án của bạn
+    return jsonify({'total': total})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

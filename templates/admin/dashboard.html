@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- Thẻ âm thanh phát hiệu lệnh chuông -->
+<audio id="notificationSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
 <style>
   /* Fix lỗi đơ cuộn trang khi bật Modal */
   body.modal-open {
@@ -128,6 +131,32 @@
         <!-- TAB 1: QUẢN LÝ PHẢN ÁNH -->
         <div class="tab-pane fade show active" id="feedbacks" role="tabpanel">
             <h5 class="fw-bold mb-3 text-secondary">Danh sách phản ánh, kiến nghị từ nhân dân</h5>
+            
+            <!-- BỘ LỌC TÌM KIẾM THÔNG MINH REALTIME -->
+            <div class="card bg-light border mb-3 p-3 shadow-sm">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Tìm theo tên người gửi, SĐT, Mã PA, tiêu đề...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filterStatus" class="form-select form-select-sm">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="Đã tiếp nhận">Đã tiếp nhận</option>
+                            <option value="Đang xử lý">Đang xử lý</option>
+                            <option value="Đã xử lý">Đã xử lý</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 fw-bold" onclick="resetFilters()">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
@@ -416,7 +445,7 @@
                     </div>
                 </div>
 
-                <!-- FOOTER (LUÔN CỐ ĐỊNH Ở ĐÁY, KHÔNG BỊ TRÀN NHƯ TRƯỚC HỢP LỖI) -->
+                <!-- FOOTER -->
                 <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi</button>
@@ -427,8 +456,9 @@
 </div>
 {% endfor %}
 
-<!-- JAVASCRIPT XỬ LÝ SWEETALERT2, LEAFLET MAP & MODAL -->
+<!-- JAVASCRIPT XỬ LÝ SWEETALERT2, LEAFLET MAP & REALTIME -->
 <script>
+// HÀM XÁC NHẬN XÓA
 function confirmDelete(formId, itemTypeName) {
     Swal.fire({
         title: 'Xác nhận xóa?',
@@ -452,6 +482,46 @@ function confirmDelete(formId, itemTypeName) {
     });
 }
 
+// XỬ LÝ LỌC VÀ TÌM KIẾM REALTIME
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const filterStatus = document.getElementById('filterStatus');
+
+    if (searchInput && filterStatus) {
+        searchInput.addEventListener('keyup', filterTable);
+        filterStatus.addEventListener('change', filterTable);
+    }
+});
+
+function filterTable() {
+    let searchText = document.getElementById('searchInput').value.toLowerCase().trim();
+    let statusText = document.getElementById('filterStatus').value;
+    let rows = document.querySelectorAll('#feedbacks table tbody tr');
+
+    rows.forEach(row => {
+        if (row.cells.length <= 1) return;
+
+        let text = row.innerText.toLowerCase();
+        let statusCell = row.cells[4] ? row.cells[4].innerText.trim() : '';
+
+        let matchesSearch = text.includes(searchText);
+        let matchesStatus = !statusText || statusCell.includes(statusText);
+
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterStatus').value = '';
+    filterTable();
+}
+
+// KHỞI TẠO BẢN ĐỒ LEAFLET TRONG MODAL
 document.addEventListener('DOMContentLoaded', function () {
     var modals = document.querySelectorAll('.modal');
     
@@ -491,5 +561,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+// TỰ ĐỘNG KIỂM TRA & THÔNG BÁO CHUÔNG PHẢN ÁNH MỚI
+// Ép kiểu chuỗi Jinja sang Số an toàn cho JS
+let lastFeedbackCount = Number("{{ total_feedbacks or 0 }}");
+
+function checkNewFeedbacks() {
+    fetch('/api/check-new-feedbacks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.total > lastFeedbackCount) {
+                lastFeedbackCount = data.total;
+
+                // 1. Phát âm thanh chuông
+                const sound = document.getElementById('notificationSound');
+                if (sound) {
+                    sound.play().catch(e => console.log("Cần tương tác trang để phát âm thanh:", e));
+                }
+
+                // 2. Hiển thị thông báo nổi (Toast)
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: '🔔 Có phản ánh mới từ người dân!',
+                    text: 'Vui lòng bấm để tải lại dữ liệu mới nhất.',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Tải lại ngay',
+                    timer: 15000,
+                    timerProgressBar: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            }
+        })
+        .catch(err => console.error("Lỗi kiểm tra phản ánh mới:", err));
+}
+
+// Kiểm tra định kỳ mỗi 10 giây (10000 ms)
+setInterval(checkNewFeedbacks, 10000);
 </script>
 {% endblock %}

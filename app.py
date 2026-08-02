@@ -1,6 +1,6 @@
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
@@ -10,6 +10,11 @@ from models import db, Category, Feedback, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHỦ TẮT TRÌNH DUYỆT
+app.config["SESSION_PERMANENT"] = False
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)  # Tự hết hạn sau 30 phút nếu không thao tác
+
 db.init_app(app)
 
 # 🔥 TỰ ĐỘNG TẠO BẢNG & TẠO/CẬP NHẬT TÀI KHOẢN ADMIN
@@ -31,7 +36,7 @@ with app.app_context():
         admin_user.password = "123456@"
         admin_user.role = "admin"
         
-    # 2. Khởi tạo danh mục mặc định nếu chưa có
+    # Khởi tạo danh mục mặc định nếu chưa có
     if Category.query.count() == 0:
         default_categories = [
             "Giao thông - Hạ tầng",
@@ -57,6 +62,11 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # ==========================================
 # DECORATORS BẢO MẬT & PHÂN QUYỀN
 # ==========================================
+
+# Làm mới thời gian hết hạn session khi có tương tác
+@app.before_request
+def make_session_non_permanent():
+    session.modified = True
 
 # 1. Kiểm tra đăng nhập bắt buộc
 def login_required(f):
@@ -97,7 +107,6 @@ def generate_feedback_code():
 def home():
     categories = Category.query.all()
     
-    # 🔥 BỔ SUNG: Thống kê số liệu & Danh sách phản ánh mới nhất cho Trang Chủ mới
     total_feedbacks = Feedback.query.count()
     completed_count = Feedback.query.filter_by(status="Đã xử lý").count()
     processing_count = Feedback.query.filter_by(status="Đang xử lý").count()
@@ -185,6 +194,9 @@ def login():
         if user.password != password:
             flash("Mật khẩu không chính xác, vui lòng thử lại!", "danger")
             return redirect(url_for("login"))
+
+        # 🔥 ĐẢM BẢO PHIÊN KHÔNG CỐ ĐỊNH (TẮT LƯU ĐĂNG NHẬP KHI ĐÓNG TRÌNH DUYỆT)
+        session.permanent = False
 
         session["user_id"] = user.id
         session["username"] = user.username

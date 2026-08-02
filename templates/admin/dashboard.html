@@ -13,19 +13,10 @@
 <audio id="notificationSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <style>
-  /* Fix lỗi đơ cuộn trang khi bật Modal */
-  body.modal-open {
-    overflow: hidden !important;
-  }
-  .modal {
-    -webkit-overflow-scrolling: touch;
-    z-index: 1050 !important;
-  }
-  .modal-backdrop {
-    z-index: 1040 !important;
-  }
+  body.modal-open { overflow: hidden !important; }
+  .modal { -webkit-overflow-scrolling: touch; z-index: 1050 !important; }
+  .modal-backdrop { z-index: 1040 !important; }
 
-  /* Ép Modal cố định chiều cao và chỉ cuộn phần nội dung Body */
   .custom-admin-modal .modal-content {
     height: 85vh !important;
     display: flex !important;
@@ -38,14 +29,8 @@
     height: 100% !important;
     margin-bottom: 0 !important;
   }
-  .custom-admin-modal .modal-body {
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-  }
-  .custom-admin-modal .modal-footer,
-  .custom-admin-modal .modal-header {
-    flex-shrink: 0 !important;
-  }
+  .custom-admin-modal .modal-body { flex: 1 1 auto !important; overflow-y: auto !important; }
+  .custom-admin-modal .modal-footer, .custom-admin-modal .modal-header { flex-shrink: 0 !important; }
 </style>
 
 <div class="container-fluid py-2">
@@ -124,6 +109,11 @@
                 <i class="fa-solid fa-layer-group me-2"></i>Danh Mục Lĩnh Vực
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button" role="tab">
+                <i class="fa-solid fa-newspaper me-2"></i>Quản Lý Tin Tức
+            </button>
+        </li>
     </ul>
     
     <!-- NỘI DUNG CÁC TAB -->
@@ -133,7 +123,6 @@
         <div class="tab-pane fade show active" id="feedbacks" role="tabpanel">
             <h5 class="fw-bold mb-3 text-secondary">Danh sách phản ánh, kiến nghị từ nhân dân</h5>
             
-            <!-- BỘ LỌC TÌM KIẾM THÔNG MINH REALTIME & NÚT XUẤT EXCEL -->
             <div class="card bg-light border mb-3 p-3 shadow-sm">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-4">
@@ -194,10 +183,6 @@
                                     {% set file_list = fb.media_files.split(',') %}
                                     <span class="badge bg-primary text-white">
                                         <i class="fa-solid fa-paperclip me-1"></i>{{ file_list|length }} tệp
-                                    </span>
-                                {% elif fb.image %}
-                                    <span class="badge bg-primary text-white">
-                                        <i class="fa-solid fa-image me-1"></i>1 tệp
                                     </span>
                                 {% else %}
                                     <span class="badge bg-light text-muted border">Không có</span>
@@ -329,6 +314,93 @@
             </div>
         </div>
 
+        <!-- TAB 4: QUẢN LÝ TIN TỨC -->
+        <div class="tab-pane fade" id="news" role="tabpanel">
+            <div class="row">
+                <div class="col-md-5 mb-3">
+                    <div class="card border p-3 bg-light">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-pen-to-square me-1"></i> Đăng Tin Tức / Thông Báo Mới</h6>
+                        <form action="{{ url_for('add_news') }}" method="POST" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <label class="form-label fw-bold small">Tiêu đề tin tức:</label>
+                                <input type="text" name="title" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold small">Danh mục / Phân loại:</label>
+                                <select name="category" class="form-select form-select-sm">
+                                    <option value="Thông báo quan trọng">Thông báo quan trọng</option>
+                                    <option value="Hoạt động địa phương">Hoạt động địa phương</option>
+                                    <option value="Cải cách hành chính">Cải cách hành chính</option>
+                                    <option value="Khuyến nông">Khuyến nông</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold small">Ảnh đại diện:</label>
+                                <input type="file" name="image" class="form-control form-control-sm" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold small">Tóm tắt ngắn:</label>
+                                <textarea name="summary" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold small">Nội dung chi tiết:</label>
+                                <textarea name="content" class="form-control form-control-sm" rows="4" required></textarea>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured">
+                                <label class="form-check-label small fw-bold" for="is_featured">
+                                    Đặt làm Tin Nổi Bật
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm fw-bold w-100"><i class="fa-solid fa-paper-plane me-1"></i> Đăng tin ngay</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <h6 class="fw-bold text-secondary mb-3">Danh sách tin tức đã đăng</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tiêu đề</th>
+                                    <th>Danh mục</th>
+                                    <th>Nổi bật</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for n in news_list %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ n.title }}</td>
+                                    <td><span class="badge bg-secondary">{{ n.category }}</span></td>
+                                    <td>
+                                        {% if n.is_featured %}
+                                            <span class="badge bg-danger">Có</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border">Không</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form id="delete-news-form-{{ n.id }}" action="{{ url_for('delete_news', news_id=n.id) }}" method="POST" class="d-inline">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-news-form-{{ n.id }}', 'bài viết này')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Chưa có bài viết nào.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -341,15 +413,12 @@
         <div class="modal-content shadow-lg border-0">
             <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
                 
-                <!-- HEADER (LUÔN CỐ ĐỊNH Ở TRÊN) -->
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- BODY (CUỘN ĐỘC LẬP TRONG KHUNG) -->
                 <div class="modal-body p-4">
-                    <!-- THÔNG TIN NGƯỜI GỬI -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Người gửi:</strong> {{ fb.fullname }}</p>
@@ -367,7 +436,6 @@
                         </div>
                     </div>
 
-                    <!-- BẢN ĐỒ ĐỊNH VỊ GPS NẾU CÓ TỌA ĐỘ -->
                     {% if fb.latitude and fb.longitude %}
                     <div class="mb-3">
                         <label class="form-label fw-bold"><i class="fa-solid fa-map-location-dot me-1 text-danger"></i> Vị trí định vị thực tế:</label>
@@ -382,14 +450,12 @@
 
                     <hr>
                     
-                    <!-- NỘI DUNG PHẢN ÁNH -->
                     <div class="mb-3">
                         <h6 class="fw-bold text-dark">Tiêu đề: {{ fb.title }}</h6>
                         <label class="form-label fw-bold">Nội dung phản ánh đầy đủ:</label>
                         <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
                     </div>
 
-                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM -->
                     <div class="mb-3">
                         <label class="form-label fw-bold d-block">Tệp đính kèm (Ảnh / Video minh chứng):</label>
                         
@@ -422,19 +488,12 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                        {% elif fb.image %}
-                            <div class="mt-1">
-                                <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 180px; object-fit: contain;" alt="Hình ảnh đính kèm">
-                                </a>
-                            </div>
                         {% else %}
                             <p class="text-muted fst-italic mb-0">Người dân không gửi kèm ảnh/video.</p>
                         {% endif %}
                     </div>
                     <hr>
 
-                    <!-- FORM CẬP NHẬT CỦA ADMIN -->
                     <div class="mb-3">
                         <label class="form-label fw-bold">Trạng thái xử lý:</label>
                         <select name="status" class="form-select">
@@ -451,7 +510,6 @@
                     </div>
                 </div>
 
-                <!-- FOOTER -->
                 <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi</button>
@@ -464,22 +522,18 @@
 
 <!-- JAVASCRIPT XỬ LÝ SWEETALERT2, LEAFLET MAP, EXCEL & REALTIME -->
 <script>
-// HÀM XUẤT BÁO CÁO EXCEL CHUYÊN NGHIỆP & ĐẸP MẮT
 function exportToExcel() {
     let excelData = [];
-
-    // 1. DÒNG TIÊU ĐỀ BÁO CÁO HÀNH CHÍNH
     excelData.push(["ỦY BÀN NHÂN DÂN XÃ HÒA THẮNG"]);
     excelData.push(["HỆ THỐNG TIẾP NHẬN & XỬ LÝ PHẢN ÁNH KIẾN NGHỊ"]);
-    excelData.push([""]); // Dòng trống
+    excelData.push([""]);
     excelData.push(["BÁO CÁO DANH SÁCH PHẢN ÁNH KIẾN NGHỊ CỦA NHÂN DÂN"]);
     
     let now = new Date();
     let dateStr = `Ngày xuất báo cáo: ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}`;
     excelData.push([dateStr]);
-    excelData.push([""]); // Dòng trống
+    excelData.push([""]);
 
-    // 2. HEADER CÁC CỘT DỮ LIỆU (TÁCH BIỆT RÕ RÀNG)
     excelData.push([
         "STT", 
         "Mã PA", 
@@ -491,66 +545,39 @@ function exportToExcel() {
         "Trạng thái xử lý"
     ]);
 
-    // 3. DUYỆT BẢNG LẤY DỮ LIỆU
     let rows = document.querySelectorAll('#feedbackTable tbody tr');
     let stt = 1;
 
     rows.forEach(row => {
-        // Bỏ qua dòng trống nếu không có dữ liệu
         if (row.cells.length <= 1) return;
 
-        // Lấy dữ liệu từng cột và làm sạch
         let code = row.cells[0]?.innerText.trim() || '';
-        
-        // Cột người gửi: Tách tên và SĐT
         let senderDiv = row.cells[1];
         let name = senderDiv?.querySelector('strong')?.innerText.trim() || '';
         let phone = senderDiv?.querySelector('small')?.innerText.trim() || '';
 
-        // Cột Tiêu đề & Nội dung
         let contentDiv = row.cells[2];
         let title = contentDiv?.querySelector('div')?.innerText.trim() || '';
         let content = contentDiv?.querySelector('small')?.innerText.trim() || '';
 
-        // Đính kèm & Trạng thái
         let attachments = row.cells[3]?.innerText.trim() || 'Không';
         let status = row.cells[4]?.innerText.trim() || '';
 
-        excelData.push([
-            stt++,
-            code,
-            name,
-            phone,
-            title,
-            content,
-            attachments,
-            status
-        ]);
+        excelData.push([stt++, code, name, phone, title, content, attachments, status]);
     });
 
-    // 4. TẠO WORKBOOK VÀ SHEET
     let ws = XLSX.utils.aoa_to_sheet(excelData);
-
-    // 5. CẤU HÌNH ĐỘ RỘNG CHO CÁC CỘT (ĐỂ KHÔNG BỊ BÓP MẤT CHỮ)
     ws['!cols'] = [
-        { wch: 6 },  // STT
-        { wch: 15 }, // Mã PA
-        { wch: 22 }, // Người gửi
-        { wch: 14 }, // Số điện thoại
-        { wch: 30 }, // Tiêu đề
-        { wch: 45 }, // Nội dung
-        { wch: 16 }, // Đính kèm
-        { wch: 18 }  // Trạng thái
+        { wch: 6 }, { wch: 15 }, { wch: 22 }, { wch: 14 },
+        { wch: 30 }, { wch: 45 }, { wch: 16 }, { wch: 18 }
     ];
 
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach_Phan_Anh");
 
-    // 6. TẢI FILE EXCEL VỀ MÁY
     let today = now.toISOString().slice(0, 10);
     XLSX.writeFile(wb, `Bao_Cao_Phan_Anh_UBND_Hoa_Thang_${today}.xlsx`);
 
-    // Thông báo cho người dùng
     Swal.fire({
         toast: true,
         position: 'top-end',
@@ -561,7 +588,6 @@ function exportToExcel() {
     });
 }
 
-// HÀM XÁC NHẬN XÓA
 function confirmDelete(formId, itemTypeName) {
     Swal.fire({
         title: 'Xác nhận xóa?',
@@ -585,7 +611,6 @@ function confirmDelete(formId, itemTypeName) {
     });
 }
 
-// XỬ LÝ LỌC VÀ TÌM KIẾM REALTIME
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
     const filterStatus = document.getElementById('filterStatus');
@@ -624,7 +649,6 @@ function resetFilters() {
     filterTable();
 }
 
-// KHỞI TẠO BẢN ĐỒ LEAFLET TRONG MODAL
 document.addEventListener('DOMContentLoaded', function () {
     var modals = document.querySelectorAll('.modal');
     
@@ -665,7 +689,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// TỰ ĐỘNG KIỂM TRA & THÔNG BÁO CHUÔNG PHẢN ÁNH MỚI
 let lastFeedbackCount = Number("{{ total_feedbacks or 0 }}");
 
 function checkNewFeedbacks() {
@@ -675,13 +698,11 @@ function checkNewFeedbacks() {
             if (data.total > lastFeedbackCount) {
                 lastFeedbackCount = data.total;
 
-                // 1. Phát âm thanh chuông
                 const sound = document.getElementById('notificationSound');
                 if (sound) {
                     sound.play().catch(e => console.log("Cần tương tác trang để phát âm thanh:", e));
                 }
 
-                // 2. Hiển thị thông báo nổi (Toast)
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
@@ -702,7 +723,6 @@ function checkNewFeedbacks() {
         .catch(err => console.error("Lỗi kiểm tra phản ánh mới:", err));
 }
 
-// Kiểm tra định kỳ mỗi 10 giây (10000 ms)
 setInterval(checkNewFeedbacks, 10000);
 </script>
 {% endblock %}

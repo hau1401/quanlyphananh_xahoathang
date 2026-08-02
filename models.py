@@ -1,6 +1,22 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
+
+class News(db.Model):
+    __tablename__ = 'news'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    summary = db.Column(db.Text, nullable=True)       # Tóm tắt bài viết
+    content = db.Column(db.Text, nullable=False)     # Nội dung chi tiết
+    category = db.Column(db.String(100), default="Thông báo") # Danh mục
+    image = db.Column(db.String(255), nullable=True)  # Tên file ảnh đại diện
+    is_featured = db.Column(db.Boolean, default=False)# Đánh dấu là Tin nổi bật
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    def __repr__(self):
+        return f"<News {self.title}>"
 
 
 class Category(db.Model):
@@ -36,6 +52,9 @@ class Feedback(db.Model):
     
     # 🎥 🖼️ Lưu danh sách các tên file (ảnh/video) phân cách bằng dấu phẩy
     media_files = db.Column(db.Text, nullable=True)
+    
+    # Nội dung phản hồi kết quả từ chính quyền
+    response_content = db.Column(db.Text, nullable=True)
     
     status = db.Column(db.String(50), default="Đã tiếp nhận")
     created_at = db.Column(db.DateTime, server_default=db.func.now())

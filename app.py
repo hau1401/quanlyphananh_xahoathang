@@ -2,17 +2,17 @@ import os
 import random
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
-from sqlalchemy import text,inspect
+from sqlalchemy import text, inspect
 
 from config import Config
-from models import db, Category, Feedback, User
+from models import db, Category, Feedback, User, News
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHỦ TẮT TRÌNH DUYỆT
+# 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHI TẮT TRÌNH DUYỆT
 app.config["SESSION_PERMANENT"] = False
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
@@ -21,7 +21,7 @@ app.config['MAX_CONTENT_LENGTH'] = 75 * 1024 * 1024
 
 db.init_app(app)
 
-# 🔥 TỰ ĐỘNG TẠO BẢNG, VÁ CỘT MỚI (CHỐNG LỖI 500) & KHỞI TẠO ADMIN
+# 🔥 TỰ ĐỘNG TẠO BẢNG, VÁ CỘT MỚI & KHỞI TẠO DỮ LIỆU BAN ĐẦU
 with app.app_context():
     db.create_all()
     
@@ -39,6 +39,9 @@ with app.app_context():
                 conn.commit()
             if "longitude" not in existing_columns:
                 conn.execute(text("ALTER TABLE feedbacks ADD COLUMN longitude FLOAT;"))
+                conn.commit()
+            if "response_content" not in existing_columns:
+                conn.execute(text("ALTER TABLE feedbacks ADD COLUMN response_content TEXT;"))
                 conn.commit()
 
     # Khởi tạo tài khoản Admin
@@ -68,6 +71,41 @@ with app.app_context():
         ]
         for cat_name in default_categories:
             db.session.add(Category(name=cat_name))
+
+    # Khởi tạo Tin Tức Mẫu nếu chưa có
+    if News.query.count() == 0:
+        sample_news = [
+            News(
+                title="Kế hoạch triển khai dịch vụ công trực tuyến năm 2026",
+                summary="UBND xã Hòa Thắng thông báo đẩy mạnh tiếp nhận hồ sơ và trả kết quả thủ tục hành chính qua cổng dịch vụ công quốc gia...",
+                content="Nhằm nâng cao chất lượng phục vụ người dân và doanh nghiệp, UBND xã Hòa Thắng triển khai tiếp nhận 100% thủ tục hành chính đủ điều kiện lên Dịch vụ công trực tuyến toàn trình.\n\nNgười dân có thể truy cập cổng Dịch vụ công Quốc gia hoặc liên hệ Bộ phận Một cửa xã Hòa Thắng để được bộ phận cán bộ hỗ trợ và hướng dẫn chi tiết.",
+                category="Thông báo quan trọng",
+                image="news1.jpg",
+                is_featured=True
+            ),
+            News(
+                title="Tuyên truyền công tác an toàn giao thông trên địa bàn xã",
+                summary="Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ...",
+                content="Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ cho học sinh và bà con nhân dân trên địa bàn.\n\nBuổi tuyên truyền tập trung phổ biến các quy định về việc chấp hành đội mũ bảo hiểm, không sử dụng rượu bia khi tham gia giao thông và chú ý quan sát tại các điểm giao cắt giao thông trọng điểm.",
+                category="Hoạt động địa phương",
+                is_featured=False
+            ),
+            News(
+                title="Cập nhật lịch tiếp công dân định kỳ của Chủ tịch UBND xã",
+                summary="Thông báo thời gian và địa điểm tiếp công dân định kỳ hàng tháng của lãnh đạo UBND xã Hòa Thắng...",
+                content="UBND xã Hòa Thắng trân trọng thông báo lịch tiếp công dân định kỳ của Chủ tịch UBND xã như sau:\n- Thời gian: Thứ Năm hàng tuần (Sáng: 7h30 - 11h30, Chiều: 13h30 - 17h00).\n- Địa điểm: Phòng Tiếp công dân - Trụ sở UBND xã Hòa Thắng.\n\nCác ý kiến, kiến nghị của công dân sẽ được ghi nhận và chỉ đạo giải quyết trực tiếp.",
+                category="Cải cách hành chính",
+                is_featured=False
+            ),
+            News(
+                title="Hướng dẫn phòng trừ sâu bệnh mùa mưa cho cây trồng",
+                summary="Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp...",
+                content="Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp trong mùa mưa lũ.\n\nBan Khuyến nông xã khuyến nghị bà con khơi thông rãnh thoát nước, tỉa cành tạo độ thông thoáng và phun phòng trừ các loại nấm bệnh phát sinh sau mưa lớn.",
+                category="Khuyến nông",
+                is_featured=False
+            )
+        ]
+        db.session.add_all(sample_news)
 
     db.session.commit()
 
@@ -123,7 +161,6 @@ def generate_feedback_code():
 @app.route("/")
 def home():
     categories = Category.query.all()
-    
     total_feedbacks = Feedback.query.count()
     completed_count = Feedback.query.filter_by(status="Đã xử lý").count()
     processing_count = Feedback.query.filter_by(status="Đang xử lý").count()
@@ -298,6 +335,7 @@ def dashboard():
     feedbacks = Feedback.query.order_by(Feedback.id.desc()).all()
     categories = Category.query.all()
     users = User.query.all()
+    news_list = News.query.order_by(News.id.desc()).all()
 
     return render_template(
         "admin/dashboard.html",
@@ -308,7 +346,8 @@ def dashboard():
         total_users=total_users,
         feedbacks=feedbacks,
         categories=categories,
-        users=users
+        users=users,
+        news_list=news_list
     )
 
 
@@ -394,6 +433,47 @@ def delete_category(cat_id):
     return redirect(url_for("dashboard"))
 
 
+# Quản lý Tin Tức cho Admin
+@app.route("/admin/news/add", methods=["POST"])
+@admin_required
+def add_news():
+    title = request.form.get("title")
+    category = request.form.get("category")
+    summary = request.form.get("summary")
+    content = request.form.get("content")
+    is_featured = True if request.form.get("is_featured") == "on" else False
+
+    file = request.files.get("image")
+    image_filename = None
+    if file and file.filename != "" and allowed_file(file.filename):
+        image_filename = secure_filename(f"news_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], image_filename))
+
+    new_item = News(
+        title=title,
+        category=category,
+        summary=summary,
+        content=content,
+        image=image_filename,
+        is_featured=is_featured
+    )
+    db.session.add(new_item)
+    db.session.commit()
+    flash("Thêm tin tức / thông báo mới thành công!", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/admin/news/delete/<int:news_id>", methods=["POST"])
+@admin_required
+def delete_news(news_id):
+    news_item = db.session.get(News, news_id)
+    if news_item:
+        db.session.delete(news_item)
+        db.session.commit()
+        flash("Đã xóa bài viết tin tức thành công!", "success")
+    return redirect(url_for("dashboard"))
+
+
 # ==========================================
 # 4. CÁC TRANG TĨNH & TÀI KHOẢN
 # ==========================================
@@ -405,7 +485,16 @@ def about():
 
 @app.route("/news")
 def news():
-    return render_template("news.html")
+    featured_news = News.query.filter_by(is_featured=True).order_by(News.id.desc()).first()
+    if not featured_news:
+        featured_news = News.query.order_by(News.id.desc()).first()
+        
+    if featured_news:
+        other_news = News.query.filter(News.id != featured_news.id).order_by(News.id.desc()).all()
+    else:
+        other_news = []
+
+    return render_template("news.html", featured_news=featured_news, other_news=other_news)
 
 
 @app.route("/contact", methods=["GET", "POST"])
@@ -429,17 +518,9 @@ def profile():
 @login_required
 def update_profile():
     fullname = request.form.get("fullname")
-    phone = request.form.get("phone")
-    email = request.form.get("email")
-
     user = db.session.get(User, session["user_id"])
     if user:
         user.fullname = fullname
-        if hasattr(user, 'phone'):
-            user.phone = phone
-        if hasattr(user, 'email'):
-            user.email = email
-
         db.session.commit()
         session["fullname"] = fullname
         flash("Cập nhật thông tin cá nhân thành công!", "success")
@@ -475,12 +556,10 @@ def change_password():
 def forgot_password():
     if request.method == "POST":
         username = request.form.get("username")
-        email = request.form.get("email")
-
         user = User.query.filter_by(username=username).first()
 
-        if not user or (hasattr(user, 'email') and user.email != email):
-            flash("Tên đăng nhập hoặc Email không chính xác!", "danger")
+        if not user:
+            flash("Tên đăng nhập không chính xác!", "danger")
             return redirect(url_for("forgot_password"))
 
         session["reset_user_id"] = user.id
@@ -516,10 +595,10 @@ def reset_password():
 
     return render_template("reset_password.html")
 
+
 @app.route('/api/check-new-feedbacks')
 def check_new_feedbacks():
-    # Đếm tổng số phản ánh trong CSDL
-    total = Feedback.query.count()  # Hoặc câu lệnh SQL count tương ứng dự án của bạn
+    total = Feedback.query.count()
     return jsonify({'total': total})
 
 

@@ -9,18 +9,38 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-  /* Fix lỗi bị đơ, treo cuộn trang trên giao diện di động khi bật Modal */
+  /* Fix lỗi đơ cuộn trang khi bật Modal */
   body.modal-open {
     overflow: hidden !important;
   }
   .modal {
     -webkit-overflow-scrolling: touch;
+    z-index: 1050 !important;
   }
   .modal-backdrop {
     z-index: 1040 !important;
   }
-  .modal {
-    z-index: 1050 !important;
+
+  /* Ép Modal cố định chiều cao và chỉ cuộn phần nội dung Body */
+  .custom-admin-modal .modal-content {
+    height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .custom-admin-modal form {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    margin-bottom: 0 !important;
+  }
+  .custom-admin-modal .modal-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+  .custom-admin-modal .modal-footer,
+  .custom-admin-modal .modal-header {
+    flex-shrink: 0 !important;
   }
 </style>
 
@@ -135,7 +155,6 @@
                                 </small>
                             </td>
                             <td>
-                                <!-- XỬ LÝ HIỂN THỊ CỘT ĐÍNH KÈM (ẢNH & VIDEO) -->
                                 {% if fb.media_files %}
                                     {% set file_list = fb.media_files.split(',') %}
                                     <span class="badge bg-primary text-white">
@@ -162,12 +181,10 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
-                                    <!-- Nút Mở Modal Xem Chi Tiết & Cập Nhật -->
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateModal{{ fb.id }}">
                                         <i class="fa-solid fa-eye me-1"></i>Xem & Xử lý
                                     </button>
                                     
-                                    <!-- Form Xóa Phản Ánh Với SweetAlert2 -->
                                     <form id="delete-feedback-form-{{ fb.id }}" action="{{ url_for('delete_feedback', feedback_id=fb.id) }}" method="POST" class="d-inline">
                                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-feedback-form-{{ fb.id }}', 'phản ánh này')">
                                             <i class="fa-solid fa-trash"></i>
@@ -224,7 +241,6 @@
                                         <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
                                     </form>
 
-                                    <!-- Form Xóa Tài Khoản Với SweetAlert2 -->
                                     <form id="delete-user-form-{{ u.id }}" action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" class="d-inline">
                                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-user-form-{{ u.id }}', 'tài khoản này')">
                                             <i class="fa-solid fa-user-xmark"></i> Xóa
@@ -264,7 +280,6 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-folder me-2 text-warning"></i> {{ cat.name }}</span>
                             
-                            <!-- Form Xóa Danh Mục Với SweetAlert2 -->
                             <form id="delete-cat-form-{{ cat.id }}" action="{{ url_for('delete_category', cat_id=cat.id) }}" method="POST" class="d-inline">
                                 <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="confirmDelete('delete-cat-form-{{ cat.id }}', 'danh mục này')">
                                     <i class="fa-solid fa-trash"></i>
@@ -286,19 +301,19 @@
 <!-- DANH SÁCH MODAL XEM CHI TIẾT & XỬ LÝ -->
 <!-- ========================================== -->
 {% for fb in feedbacks %}
-<div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content" style="max-height: 90vh;">
-            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST" class="d-flex flex-column h-100 mb-0">
+<div class="modal fade custom-admin-modal" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
                 
-                <!-- HEADER CỐ ĐỊNH Ở ĐỈNH -->
-                <div class="modal-header bg-primary text-white flex-shrink-0">
+                <!-- HEADER (LUÔN CỐ ĐỊNH Ở TRÊN) -->
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- BODY CHO PHÉP CUỘN NỘI DUNG -->
-                <div class="modal-body overflow-auto">
+                <!-- BODY (CUỘN ĐỘC LẬP TRONG KHUNG) -->
+                <div class="modal-body p-4">
                     <!-- THÔNG TIN NGƯỜI GỬI -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -339,7 +354,7 @@
                         <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
                     </div>
 
-                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM (ẢNH VÀ VIDEO) -->
+                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM -->
                     <div class="mb-3">
                         <label class="form-label fw-bold d-block">Tệp đính kèm (Ảnh / Video minh chứng):</label>
                         
@@ -401,8 +416,8 @@
                     </div>
                 </div>
 
-                <!-- FOOTER CỐ ĐỊNH NÚT LƯU Ở ĐÁY -->
-                <div class="modal-footer bg-light flex-shrink-0">
+                <!-- FOOTER (LUÔN CỐ ĐỊNH Ở ĐÁY, KHÔNG BỊ TRÀN NHƯ TRƯỚC HỢP LỖI) -->
+                <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi</button>
                 </div>
@@ -441,7 +456,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var modals = document.querySelectorAll('.modal');
     
     modals.forEach(function (modal) {
-        // Tải bản đồ Leaflet Map khi bật Modal (nếu có GPS)
         modal.addEventListener('shown.bs.modal', function () {
             var mapElement = modal.querySelector('.leaflet-map-container');
             
@@ -469,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Dọn dẹp backdrop bị treo trên mobile khi đóng Modal
         modal.addEventListener('hidden.bs.modal', function () {
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');

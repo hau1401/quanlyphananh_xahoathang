@@ -143,12 +143,18 @@ def feedback():
                 file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
                 file.save(file_path)
 
+        # Trích xuất latitude & longitude từ form
+        lat_val = request.form.get("latitude")
+        lng_val = request.form.get("longitude")
+
         fb_item = Feedback(
             feedback_code=generate_feedback_code(),
             fullname=request.form["fullname"],
             phone=phone,
             email=request.form.get("email", ""),
             address=request.form.get("address", ""),
+            latitude=float(lat_val) if lat_val else None,
+            longitude=float(lng_val) if lng_val else None,
             category_id=request.form["category"],
             title=request.form["title"],
             content=request.form["content"],
@@ -195,7 +201,6 @@ def login():
             flash("Mật khẩu không chính xác, vui lòng thử lại!", "danger")
             return redirect(url_for("login"))
 
-        # 🔥 ĐẢM BẢO PHIÊN KHÔNG CỐ ĐỊNH (TẮT LƯU ĐĂNG NHẬP KHI ĐÓNG TRÌNH DUYỆT)
         session.permanent = False
 
         session["user_id"] = user.id

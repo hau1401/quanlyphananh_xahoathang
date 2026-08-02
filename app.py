@@ -1,11 +1,13 @@
 import os
+import io
 import random
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy import text, inspect
 from dotenv import load_dotenv
+import pandas as pd
 
 # Thư viện Cloudinary
 import cloudinary
@@ -360,6 +362,45 @@ def dashboard():
         categories=categories,
         users=users,
         news_list=news_list
+    )
+
+
+# 🟢 ROUTE MỚI: XUẤT FILE EXCEL CHUẨN TỪ SERVER (HOẠT ĐỘNG TỐT TRÊN CẢ MOBILE & PC)
+@app.route("/export-excel")
+@admin_required
+def export_excel():
+    feedbacks = Feedback.query.order_by(Feedback.id.desc()).all()
+    
+    data = []
+    for fb in feedbacks:
+        data.append({
+            "Mã PA": fb.feedback_code,
+            "Họ và tên": fb.fullname,
+            "Số điện thoại": fb.phone,
+            "Email": fb.email or "",
+            "Địa chỉ": fb.address or "",
+            "Lĩnh vực": fb.category.name if fb.category else "Khác",
+            "Tiêu đề": fb.title,
+            "Nội dung phản ánh": fb.content,
+            "Trạng thái": fb.status,
+            "Nội dung phản hồi": fb.response_content or "",
+            "Ngày gửi": fb.created_at.strftime('%d/%m/%Y %H:%M') if fb.created_at else ""
+        })
+    
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Danh_Sach_Phan_Anh')
+    
+    output.seek(0)
+    filename = f"Bao_Cao_Phan_Anh_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
     )
 
 

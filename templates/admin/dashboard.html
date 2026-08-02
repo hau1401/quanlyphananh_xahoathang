@@ -145,9 +145,9 @@
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button type="button" class="btn btn-sm btn-success w-100 fw-bold shadow-sm" onclick="exportToExcel()">
-                            <i class="fa-solid fa-file-excel me-1"></i> Xuất Báo Cáo Excel
-                        </button>
+                        <a href="{{ url_for('export_excel') }}" class="btn btn-success fw-bold">
+                            <i class="fa-solid fa-file-excel me-2"></i>Xuất Báo Cáo Excel
+                        </a>
                     </div>
                 </div>
             </div>

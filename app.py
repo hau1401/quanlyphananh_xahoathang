@@ -5,20 +5,35 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
 from sqlalchemy import text, inspect
+from dotenv import load_dotenv
+
+# Thư viện Cloudinary
+import cloudinary
+import cloudinary.uploader
 
 from config import Config
 from models import db, Category, Feedback, User, News
 
+# ⚡ Load biến môi trường từ tệp .env
+load_dotenv()
+
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# 🛠️ Cấu hình Cloudinary từ biến môi trường (.env)
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+
 # 🛠️ Ưu tiên kết nối PostgreSQL trên Render
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    # Render cấp URL chuẩn "postgres://", SQLAlchemy yêu cầu "postgresql://"
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-
 
 # 🔥 CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT KHI TẮT TRÌNH DUYỆT
 app.config["SESSION_PERMANENT"] = False
@@ -33,7 +48,6 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
-    # 🛠️ KIỂM TRA VÀ BỔ SUNG CỘT MỚI MỘT CÁCH AN TOÀN
     inspector = inspect(db.engine)
     if inspector.has_table("feedbacks"):
         existing_columns = [col['name'] for col in inspector.get_columns("feedbacks")]
@@ -97,31 +111,13 @@ with app.app_context():
                 content="Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ cho học sinh và bà con nhân dân trên địa bàn.\n\nBuổi tuyên truyền tập trung phổ biến các quy định về việc chấp hành đội mũ bảo hiểm, không sử dụng rượu bia khi tham gia giao thông và chú ý quan sát tại các điểm giao cắt giao thông trọng điểm.",
                 category="Hoạt động địa phương",
                 is_featured=False
-            ),
-            News(
-                title="Cập nhật lịch tiếp công dân định kỳ của Chủ tịch UBND xã",
-                summary="Thông báo thời gian và địa điểm tiếp công dân định kỳ hàng tháng của lãnh đạo UBND xã Hòa Thắng...",
-                content="UBND xã Hòa Thắng trân trọng thông báo lịch tiếp công dân định kỳ của Chủ tịch UBND xã như sau:\n- Thời gian: Thứ Năm hàng tuần (Sáng: 7h30 - 11h30, Chiều: 13h30 - 17h00).\n- Địa điểm: Phòng Tiếp công dân - Trụ sở UBND xã Hòa Thắng.\n\nCác ý kiến, kiến nghị của công dân sẽ được ghi nhận và chỉ đạo giải quyết trực tiếp.",
-                category="Cải cách hành chính",
-                is_featured=False
-            ),
-            News(
-                title="Hướng dẫn phòng trừ sâu bệnh mùa mưa cho cây trồng",
-                summary="Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp...",
-                content="Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp trong mùa mưa lũ.\n\nBan Khuyến nông xã khuyến nghị bà con khơi thông rãnh thoát nước, tỉa cành tạo độ thông thoáng và phun phòng trừ các loại nấm bệnh phát sinh sau mưa lớn.",
-                category="Khuyến nông",
-                is_featured=False
             )
         ]
         db.session.add_all(sample_news)
 
     db.session.commit()
 
-UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mkv'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mkv', 'webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -197,7 +193,7 @@ def feedback():
             return render_template("feedback.html", categories=categories)
 
         uploaded_files = request.files.getlist("media_files")
-        saved_filenames = []
+        saved_urls = []
 
         if len(uploaded_files) > 5:
             flash("Chỉ được gửi tối đa 5 tệp đính kèm!", "danger")
@@ -206,15 +202,23 @@ def feedback():
         for file in uploaded_files:
             if file and file.filename != "":
                 if allowed_file(file.filename):
-                    filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100,999)}_{file.filename}")
-                    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-                    file.save(file_path)
-                    saved_filenames.append(filename)
+                    try:
+                        # ⚡ Upload trực tiếp tệp từ máy người dùng lên Cloudinary
+                        upload_result = cloudinary.uploader.upload(
+                            file,
+                            folder="phan_anh_hoa_thang",
+                            resource_type="auto"
+                        )
+                        # Lấy đường dẫn HTTPS trực tuyến cố định
+                        saved_urls.append(upload_result.get('secure_url'))
+                    except Exception as e:
+                        flash(f"Lỗi tải file {file.filename} lên Cloudinary: {str(e)}", "danger")
+                        return render_template("feedback.html", categories=categories)
                 else:
                     flash(f"Tệp '{file.filename}' không đúng định dạng cho phép!", "danger")
                     return render_template("feedback.html", categories=categories)
 
-        media_files_str = ",".join(saved_filenames) if saved_filenames else None
+        media_files_str = ",".join(saved_urls) if saved_urls else None
 
         lat_val = request.form.get("latitude")
         lng_val = request.form.get("longitude")
@@ -441,7 +445,7 @@ def delete_category(cat_id):
     return redirect(url_for("dashboard"))
 
 
-# Quản lý Tin Tức cho Admin
+# Quản lý Tin Tức cho Admin (Tải ảnh đại diện tin tức lên Cloudinary)
 @app.route("/admin/news/add", methods=["POST"])
 @admin_required
 def add_news():
@@ -452,17 +456,24 @@ def add_news():
     is_featured = True if request.form.get("is_featured") == "on" else False
 
     file = request.files.get("image")
-    image_filename = None
+    image_url = None
     if file and file.filename != "" and allowed_file(file.filename):
-        image_filename = secure_filename(f"news_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], image_filename))
+        try:
+            upload_result = cloudinary.uploader.upload(
+                file,
+                folder="news_hoa_thang",
+                resource_type="auto"
+            )
+            image_url = upload_result.get('secure_url')
+        except Exception as e:
+            flash(f"Lỗi tải ảnh tin tức lên Cloudinary: {str(e)}", "danger")
 
     new_item = News(
         title=title,
         category=category,
         summary=summary,
         content=content,
-        image=image_filename,
+        image=image_url,
         is_featured=is_featured
     )
     db.session.add(new_item)

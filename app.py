@@ -11,9 +11,12 @@ from models import db, Category, Feedback, User
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
-app.secret_key = "ubnd_hoa_thang_secret_key_123"
 
-# 🔥 SỬA LỖI 404: Sử dụng app.root_path để xác định chính xác vị trí thư mục static/uploads
+# 🔥 TỰ ĐỘNG TẠO BẢNG CSDL (Cần thiết khi triển khai trên Render / SQLite)
+with app.app_context():
+    db.create_all()
+
+# 🔥 XÁC ĐỊNH CHÍNH XÁC VỊ TRÍ THƯ MỤC UPLOAD ẢNH
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -61,7 +64,21 @@ def generate_feedback_code():
 @app.route("/")
 def home():
     categories = Category.query.all()
-    return render_template("index.html", categories=categories)
+    
+    # 🔥 BỔ SUNG: Thống kê số liệu & Danh sách phản ánh mới nhất cho Trang Chủ mới
+    total_feedbacks = Feedback.query.count()
+    completed_count = Feedback.query.filter_by(status="Đã xử lý").count()
+    processing_count = Feedback.query.filter_by(status="Đang xử lý").count()
+    recent_feedbacks = Feedback.query.order_by(Feedback.id.desc()).limit(6).all()
+
+    return render_template(
+        "index.html", 
+        categories=categories,
+        total_feedbacks=total_feedbacks,
+        completed_count=completed_count,
+        processing_count=processing_count,
+        recent_feedbacks=recent_feedbacks
+    )
 
 
 @app.route("/feedback", methods=["GET", "POST"])
@@ -76,7 +93,6 @@ def feedback():
         if "image" in request.files:
             file = request.files["image"]
             if file and file.filename != "":
-                # Thêm chuỗi thời gian vào tên file để không bị trùng lặp
                 filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
                 file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
                 file.save(file_path)
@@ -90,7 +106,7 @@ def feedback():
             category_id=request.form["category"],
             title=request.form["title"],
             content=request.form["content"],
-            image=filename,  # Lưu tên file thực tế vào CSDL
+            image=filename,
             status="Đã tiếp nhận"
         )
 
@@ -123,20 +139,16 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # Truy vấn tìm tài khoản trong CSDL
         user = User.query.filter_by(username=username).first()
 
-        # 1. Kiểm tra tài khoản có tồn tại hay không
         if not user:
             flash("Tên đăng nhập không tồn tại trong hệ thống!", "danger")
             return redirect(url_for("login"))
 
-        # 2. Kiểm tra mật khẩu
         if user.password != password:
             flash("Mật khẩu không chính xác, vui lòng thử lại!", "danger")
             return redirect(url_for("login"))
 
-        # 3. Đăng nhập thành công -> Lưu dữ liệu vào Session
         session["user_id"] = user.id
         session["username"] = user.username
         session["fullname"] = user.fullname
@@ -160,14 +172,12 @@ def register():
             flash("Mật khẩu nhập lại không khớp!", "danger")
             return redirect(url_for("register"))
 
-        # Kiểm tra trùng tên đăng nhập trong CSDL
         check_user = User.query.filter_by(username=username).first()
 
         if check_user:
             flash("Tên đăng nhập này đã tồn tại!", "warning")
             return redirect(url_for("register"))
 
-        # Tạo user mới
         new_user = User(
             fullname=fullname,
             username=username,
@@ -195,7 +205,6 @@ def logout():
 # 3. QUẢN TRỊ ADMIN (DASHBOARD & CÁC CHỨC NĂNG)
 # ==========================================
 
-# Bảng điều khiển Admin
 @app.route("/dashboard")
 @admin_required
 def dashboard():
@@ -222,7 +231,6 @@ def dashboard():
     )
 
 
-# Cập nhật trạng thái phản ánh
 @app.route("/admin/feedback/update/<int:feedback_id>", methods=["POST"])
 @admin_required
 def update_feedback_status(feedback_id):
@@ -240,7 +248,6 @@ def update_feedback_status(feedback_id):
     return redirect(url_for("dashboard"))
 
 
-# Xóa phản ánh rác
 @app.route("/admin/feedback/delete/<int:feedback_id>", methods=["POST"])
 @admin_required
 def delete_feedback(feedback_id):
@@ -252,7 +259,6 @@ def delete_feedback(feedback_id):
     return redirect(url_for("dashboard"))
 
 
-# Phân quyền người dùng (Chuyển giữa Staff và Admin)
 @app.route("/admin/user/change-role/<int:user_id>", methods=["POST"])
 @admin_required
 def change_user_role(user_id):
@@ -269,7 +275,6 @@ def change_user_role(user_id):
     return redirect(url_for("dashboard"))
 
 
-# Xóa tài khoản người dùng
 @app.route("/admin/user/delete/<int:user_id>", methods=["POST"])
 @admin_required
 def delete_user(user_id):
@@ -285,7 +290,6 @@ def delete_user(user_id):
     return redirect(url_for("dashboard"))
 
 
-# Thêm danh mục/lĩnh vực phản ánh mới
 @app.route("/admin/category/add", methods=["POST"])
 @admin_required
 def add_category():
@@ -298,7 +302,6 @@ def add_category():
     return redirect(url_for("dashboard"))
 
 
-# Xóa danh mục/lĩnh vực phản ánh
 @app.route("/admin/category/delete/<int:cat_id>", methods=["POST"])
 @admin_required
 def delete_category(cat_id):
@@ -335,7 +338,7 @@ def contact():
 
 
 # ==========================================
-# 5. QUẢN LÝ TÀI KHOẢN CÁ NHÂN & ĐỔI MẬT KHKHẨU
+# 5. QUẢN LÝ TÀI KHOẢN CÁ NHÂN & ĐỔI MẬT KHẨU
 # ==========================================
 
 @app.route("/profile")
@@ -362,7 +365,6 @@ def update_profile():
 
         db.session.commit()
 
-        # Cập nhật lại tên hiển thị trên Navbar
         session["fullname"] = fullname
         flash("Cập nhật thông tin cá nhân thành công!", "success")
 
@@ -378,17 +380,14 @@ def change_password():
 
     user = db.session.get(User, session["user_id"])
 
-    # 1. Kiểm tra mật khẩu cũ trong CSDL
     if not user or user.password != current_password:
         flash("Mật khẩu hiện tại không chính xác!", "danger")
         return redirect(url_for("profile"))
 
-    # 2. Kiểm tra mật khẩu mới và xác nhận mật khẩu
     if new_password != confirm_password:
         flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "danger")
         return redirect(url_for("profile"))
 
-    # 3. Cập nhật mật khẩu mới vào CSDL
     user.password = new_password
     db.session.commit()
 
@@ -402,15 +401,12 @@ def forgot_password():
         username = request.form.get("username")
         email = request.form.get("email")
 
-        # Tìm tài khoản theo username
         user = User.query.filter_by(username=username).first()
 
-        # Kiểm tra sự tồn tại của user và khớp Email
         if not user or (hasattr(user, 'email') and user.email != email):
             flash("Tên đăng nhập hoặc Email không chính xác!", "danger")
             return redirect(url_for("forgot_password"))
 
-        # Xác thực thành công -> Lưu ID vào session tạm thời
         session["reset_user_id"] = user.id
         flash("Xác minh thành công! Vui lòng nhập mật khẩu mới.", "success")
         return redirect(url_for("reset_password"))
@@ -433,13 +429,11 @@ def reset_password():
             flash("Mật khẩu xác nhận không khớp!", "danger")
             return redirect(url_for("reset_password"))
 
-        # Cập nhật mật khẩu mới vào CSDL
         user = db.session.get(User, reset_user_id)
         if user:
             user.password = new_password
             db.session.commit()
 
-            # Xóa session tạm
             session.pop("reset_user_id", None)
 
             flash("Đặt lại mật khẩu thành công! Vui lòng đăng nhập.", "success")
@@ -448,5 +442,8 @@ def reset_password():
     return render_template("reset_password.html")
 
 
+# ==========================================
+# KHỞI CHẠY ỨNG DỤNG
+# ==========================================
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

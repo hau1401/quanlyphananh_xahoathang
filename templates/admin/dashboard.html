@@ -287,18 +287,17 @@
 <!-- ========================================== -->
 {% for fb in feedbacks %}
 <div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
-    <!-- THÊM modal-fullscreen-sm-down và modal-dialog-scrollable ĐỂ CỐ ĐỊNH NÚT LƯU -->
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content" style="max-height: 90vh;">
             <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST" class="d-flex flex-column h-100 mb-0">
                 
-                <!-- HEADER (CỐ ĐỊNH Ở ĐỈNH) -->
+                <!-- HEADER CỐ ĐỊNH Ở ĐỈNH -->
                 <div class="modal-header bg-primary text-white flex-shrink-0">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- BODY (CHO PHÉP CUỘN BÊN TRONG) -->
+                <!-- BODY CHO PHÉP CUỘN NỘI DUNG -->
                 <div class="modal-body overflow-auto">
                     <!-- THÔNG TIN NGƯỜI GỬI -->
                     <div class="row g-3 mb-3">
@@ -317,6 +316,20 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    <!-- BẢN ĐỒ ĐỊNH VỊ GPS NẾU CÓ TỌA ĐỘ -->
+                    {% if fb.latitude and fb.longitude %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fa-solid fa-map-location-dot me-1 text-danger"></i> Vị trí định vị thực tế:</label>
+                        <div id="map-{{ fb.id }}" class="rounded border shadow-sm leaflet-map-container" 
+                             data-lat="{{ fb.latitude }}" 
+                             data-lng="{{ fb.longitude }}" 
+                             data-code="{{ fb.feedback_code }}" 
+                             data-address="{{ fb.address or '' }}" 
+                             style="height: 220px; width: 100%;"></div>
+                    </div>
+                    {% endif %}
+
                     <hr>
                     
                     <!-- NỘI DUNG PHẢN ÁNH -->
@@ -326,7 +339,7 @@
                         <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
                     </div>
 
-                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM -->
+                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM (ẢNH VÀ VIDEO) -->
                     <div class="mb-3">
                         <label class="form-label fw-bold d-block">Tệp đính kèm (Ảnh / Video minh chứng):</label>
                         
@@ -388,7 +401,7 @@
                     </div>
                 </div>
 
-                <!-- FOOTER DỨA BẤM (LUÔN CỐ ĐỊNH Ở ĐÁY, KHÔNG BỊ TRÀN NHƯ TRONG ẢNH) -->
+                <!-- FOOTER CỐ ĐỊNH NÚT LƯU Ở ĐÁY -->
                 <div class="modal-footer bg-light flex-shrink-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-success fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi</button>
@@ -399,7 +412,7 @@
 </div>
 {% endfor %}
 
-<!-- JAVASCRIPT XỬ LÝ SWEETALERT2 VÀ MODAL TỐI ƯU CHO DI ĐỘNG -->
+<!-- JAVASCRIPT XỬ LÝ SWEETALERT2, LEAFLET MAP & MODAL -->
 <script>
 function confirmDelete(formId, itemTypeName) {
     Swal.fire({
@@ -424,10 +437,39 @@ function confirmDelete(formId, itemTypeName) {
     });
 }
 
-// Xử lý dọn dẹp các lớp mờ bị treo trên giao diện di động khi đóng Modal
 document.addEventListener('DOMContentLoaded', function () {
     var modals = document.querySelectorAll('.modal');
+    
     modals.forEach(function (modal) {
+        // Tải bản đồ Leaflet Map khi bật Modal (nếu có GPS)
+        modal.addEventListener('shown.bs.modal', function () {
+            var mapElement = modal.querySelector('.leaflet-map-container');
+            
+            if (mapElement && !mapElement.dataset.initialized) {
+                var lat = parseFloat(mapElement.dataset.lat);
+                var lng = parseFloat(mapElement.dataset.lng);
+                var code = mapElement.dataset.code;
+                var address = mapElement.dataset.address;
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    var map = L.map(mapElement.id).setView([lat, lng], 15);
+                    
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '© OpenStreetMap'
+                    }).addTo(map);
+
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('<b>Vị trí phản ánh #' + code + '</b><br>' + address)
+                        .openPopup();
+
+                    mapElement.dataset.initialized = "true";
+                    setTimeout(function() { map.invalidateSize(); }, 300);
+                }
+            }
+        });
+
+        // Dọn dẹp backdrop bị treo trên mobile khi đóng Modal
         modal.addEventListener('hidden.bs.modal', function () {
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');

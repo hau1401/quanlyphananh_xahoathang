@@ -1,52 +1,29 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}
-Thành công
-{% endblock %}
+{% block title %}Gửi Phản Ánh Thành Công - UBND Xã Hòa Thắng{% endblock %}
 
 {% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow border-0 p-4">
+            <div class="card-body">
+                <i class="fa-solid fa-circle-check text-success display-1 mb-3"></i>
+                <h3 class="fw-bold text-success mb-2">Gửi Phản Ánh Thành Công!</h3>
+                <p class="text-muted">Cảm ơn bạn đã gửi phản ánh, đóng góp ý kiến cho chính quyền xã Hòa Thắng.</p>
+                
+                <div class="alert alert-light border my-4">
+                    <span class="text-muted d-block mb-1">Mã tra cứu của bạn là:</span>
+                    <h2 class="fw-bold text-primary mb-0" style="letter-spacing: 2px;">{{ code }}</h2>
+                </div>
 
-<div class="container mt-5">
+                <p class="small text-danger mb-4"><i class="fa-solid fa-circle-exclamation me-1"></i> Hãy lưu lại mã tra cứu trên để theo dõi tiến độ xử lý của cơ quan chức năng.</p>
 
-<div class="alert alert-success text-center">
-
-<h2>
-
-🎉 Gửi góp ý thành công
-
-</h2>
-
-<hr>
-
-<h4>
-
-Mã góp ý của bạn
-
-</h4>
-
-<h1 class="text-primary">
-
-{{ code }}
-
-</h1>
-
-<p>
-
-Vui lòng lưu mã này để tra cứu kết quả.
-
-</p>
-
-<a
-href="/"
-
-class="btn btn-primary">
-
-Trang chủ
-
-</a>
-
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary fw-bold">Về trang chủ</a>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary fw-bold">Tra cứu ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-</div>
-
 {% endblock %}

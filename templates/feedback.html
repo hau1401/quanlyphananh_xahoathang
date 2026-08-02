@@ -1,303 +1,115 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}
-Gửi góp ý & Phản ánh
-{% endblock %}
+{% block title %}Gửi Phản Ánh Kiến Nghị - UBND Xã Hòa Thắng{% endblock %}
 
 {% block content %}
-<!-- Nhúng Thư viện Bản đồ Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-4" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <div class="card shadow-lg border-0 rounded-3">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h2 class="fw-bold mb-1">📢 PHIẾU GỬI GÓP Ý & PHẢN ÁNH</h2>
-                    <p class="mb-0 opacity-75">
-                        Cổng tiếp nhận ý kiến của người dân xã Hòa Thắng
-                    </p>
-                </div>
-
-                <div class="card-body p-4 p-md-5">
-                    <form action="{{ url_for('feedback') }}" method="POST" enctype="multipart/form-data">
-
-                        <!-- Họ tên -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Họ và tên <span class="text-danger">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="fullname"
-                                class="form-control form-control-lg"
-                                value="{{ session.get('fullname', '') }}"
-                                placeholder="Nhập họ và tên"
-                                required>
-                        </div>
-
-                        <!-- SĐT -->
-                        <div class="mb-3">
-                            <label for="phone" class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="tel" 
-                                class="form-control form-control-lg" 
-                                id="phone" 
-                                name="phone" 
-                                placeholder="Ví dụ: 0912345678" 
-                                required 
-                                pattern="[0-9]{10,11}" 
-                                inputmode="numeric"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                title="Vui lòng nhập đúng số điện thoại (10 - 11 chữ số)">
-                        </div>
-
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <input
-                                type="email"
-                                name="email"
-                                class="form-control form-control-lg"
-                                placeholder="Nhập địa chỉ email (không bắt buộc)">
-                        </div>
-
-                        <!-- Địa chỉ & Định vị bản đồ -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Địa chỉ / Vị trí xảy ra sự việc
-                            </label>
-                            <div class="input-group mb-2">
-                                <input
-                                    type="text"
-                                    id="address_input"
-                                    name="address"
-                                    class="form-control form-control-lg"
-                                    placeholder="Ví dụ: Thôn 1, xã Hòa Thắng hoặc ghim vị trí bên dưới">
-                                <button class="btn btn-outline-primary fw-bold" type="button" onclick="getCurrentLocation()">
-                                    🎯 Lấy vị trí GPS
-                                </button>
-                            </div>
-
-                            <input type="hidden" id="latitude" name="latitude">
-                            <input type="hidden" id="longitude" name="longitude">
-
-                            <div id="map" style="height: 320px; width: 100%; z-index: 1;" class="rounded border shadow-sm mt-2"></div>
-                            <small class="text-muted d-block mt-1">💡 <i>Nhấp/Chạm trực tiếp vào bản đồ để chọn chính xác tọa độ vị trí.</i></small>
-                        </div>
-
-                        <!-- Loại góp ý -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Lĩnh vực góp ý <span class="text-danger">*</span>
-                            </label>
-                            <select
-                                name="category"
-                                class="form-select form-select-lg"
-                                required>
-                                <option value="">-- Chọn lĩnh vực --</option>
-                                {% for c in categories %}
-                                    <option value="{{ c.id }}">{{ c.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Tiêu đề -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Tiêu đề góp ý <span class="text-danger">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="title"
-                                class="form-control form-control-lg"
-                                placeholder="Ví dụ: Đường giao thông thôn 2 bị hỏng"
-                                required>
-                        </div>
-
-                        <!-- Nội dung -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Nội dung góp ý <span class="text-danger">*</span>
-                            </label>
-                            <textarea
-                                name="content"
-                                class="form-control"
-                                rows="6"
-                                placeholder="Mô tả chi tiết sự việc, địa điểm, thời gian phát sinh..."
-                                required></textarea>
-                        </div>
-
-                        <!-- 🖼️ 🎥 ĐÍNH KÈM NHIỀU ẢNH / VIDEO NẮNG -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                Tệp đính kèm (Ảnh / Video minh chứng)
-                            </label>
-                            <input
-                                type="file"
-                                id="mediaInput"
-                                name="media_files"
-                                class="form-control"
-                                accept="image/*,video/*"
-                                multiple
-                                onchange="previewMedia(event)">
-                            <small class="text-muted d-block mt-1">
-                                📌 Có thể chọn tối đa <b>5 tệp</b> (Hình ảnh hoặc Video ngắn dưới 15MB/tệp).
-                            </small>
-                            
-                            <!-- Khung xem trước các tập tin đã chọn -->
-                            <div id="mediaPreviewContainer" class="row g-2 mt-3 d-none">
-                            </div>
-                        </div>
-
-                        <!-- Nút hành động -->
-                        <div class="d-flex justify-content-center gap-3 pt-3">
-                            <button
-                                type="submit"
-                                class="btn btn-success btn-lg px-4 fw-bold">
-                                📩 Gửi góp ý
-                            </button>
-                            <button
-                                type="reset"
-                                class="btn btn-secondary btn-lg px-4"
-                                onclick="resetPreview()">
-                                🔄 Làm mới
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white p-3">
+                <h4 class="mb-0 fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Gửi Phản Ánh / Kiến Nghị</h4>
             </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('feedback') }}" method="POST" enctype="multipart/form-data">
+                    
+                    <h6 class="fw-bold text-primary mb-3">1. Thông tin người gửi</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" name="fullname" class="form-control" value="{{ session.get('fullname', '') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone" class="form-control" placeholder="Ví dụ: 0912345678" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email (không bắt buộc)</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Địa chỉ xảy ra sự việc</label>
+                            <input type="text" id="address" name="address" class="form-control" placeholder="Thôn/Buôn/Xóm...">
+                        </div>
+                    </div>
 
+                    <h6 class="fw-bold text-primary mb-3">2. Vị trí trên bản đồ (Định vị GPS)</h6>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary mb-2" onclick="getLocation()">
+                            <i class="fa-solid fa-location-crosshairs me-1"></i> Tự động lấy vị trí hiện tại
+                        </button>
+                        <div id="map" class="rounded border shadow-sm" style="height: 200px;"></div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3">3. Nội dung phản ánh</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lĩnh vực phản ánh <span class="text-danger">*</span></label>
+                        <select name="category" class="form-select" required>
+                            <option value="">-- Chọn lĩnh vực --</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề phản ánh <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="Tóm tắt ngắn gọn nội dung sự việc" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                        <textarea name="content" class="form-control" rows="5" placeholder="Mô tả cụ thể thời gian, địa điểm, sự việc..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tệp đính kèm (Ảnh / Video minh chứng)</label>
+                        <input type="file" name="media_files" class="form-control" multiple accept="image/*,video/*">
+                        <small class="text-muted d-block mt-1">Được gửi tối đa 5 tệp (Hình ảnh hoặc Video ngắn).</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Gửi phản ánh
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript xử lý Xem trước Bản đồ & Đa phương tiện -->
 <script>
-    // 1. XỬ LÝ BẢN ĐỒ LEAFLET
-    var defaultLat = 12.6667; 
-    var defaultLng = 108.1000;
+var map = L.map('map').setView([12.6667, 108.0500], 13); // Mặc định xã Hòa Thắng
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-    var map = L.map('map').setView([defaultLat, defaultLng], 13);
+var marker;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+function onMapClick(e) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker(e.latlng).addTo(map);
+    document.getElementById('latitude').value = e.latlng.lat;
+    document.getElementById('longitude').value = e.latlng.lng;
+}
 
-    var marker;
+map.on('click', onMapClick);
 
-    function setMarker(lat, lng) {
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-            marker.on('dragend', function(e) {
-                var position = marker.getLatLng();
-                updateCoordinates(position.lat, position.lng);
-            });
-        }
-        map.panTo([lat, lng]);
-        updateCoordinates(lat, lng);
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            map.setView([lat, lng], 16);
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup("Vị trí của bạn").openPopup();
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+        });
+    } else {
+        alert("Trình duyệt không hỗ trợ định vị vị trí!");
     }
-
-    function updateCoordinates(lat, lng) {
-        document.getElementById('latitude').value = lat;
-        document.getElementById('longitude').value = lng;
-    }
-
-    map.on('click', function(e) {
-        setMarker(e.latlng.lat, e.latlng.lng);
-    });
-
-    function getCurrentLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-                map.setView([lat, lng], 16);
-                setMarker(lat, lng);
-                document.getElementById('address_input').value = "Tọa độ GPS: " + lat.toFixed(5) + ", " + lng.toFixed(5);
-            }, function(error) {
-                alert("Không thể lấy vị trí hiện tại. Vui lòng cho phép quyền truy cập Vị trí (GPS) trên thiết bị!");
-            });
-        } else {
-            alert("Trình duyệt của bạn không hỗ trợ định vị GPS!");
-        }
-    }
-
-    // 2. XỬ LÝ XEM TRƯỚC NHIỀU ẢNH / VIDEO
-    function previewMedia(event) {
-        const input = event.target;
-        const container = document.getElementById('mediaPreviewContainer');
-        container.innerHTML = ''; 
-
-        if (input.files && input.files.length > 0) {
-            if (input.files.length > 5) {
-                alert("Bạn chỉ được chọn tối đa 5 tệp đính kèm!");
-                input.value = ""; 
-                container.classList.add('d-none');
-                return;
-            }
-
-            container.classList.remove('d-none');
-
-            Array.from(input.files).forEach((file) => {
-                const col = document.createElement('div');
-                col.className = 'col-6 col-md-4 text-center';
-
-                const card = document.createElement('div');
-                card.className = 'card h-100 p-2 shadow-sm border';
-
-                const fileReader = new FileReader();
-                fileReader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'img-fluid rounded';
-                        img.style.maxHeight = '120px';
-                        img.style.objectFit = 'cover';
-                        card.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = e.target.result;
-                        video.controls = true;
-                        video.className = 'w-100 rounded';
-                        video.style.maxHeight = '120px';
-                        card.appendChild(video);
-                    }
-
-                    const caption = document.createElement('small');
-                    caption.className = 'text-muted mt-1 text-truncate d-block';
-                    caption.innerText = file.name;
-                    card.appendChild(caption);
-
-                    col.appendChild(card);
-                    container.appendChild(col);
-                };
-                fileReader.readAsDataURL(file);
-            });
-        } else {
-            resetPreview();
-        }
-    }
-
-    function resetPreview() {
-        const container = document.getElementById('mediaPreviewContainer');
-        container.innerHTML = '';
-        container.classList.add('d-none');
-    }
+}
 </script>
 {% endblock %}

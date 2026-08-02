@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Tra Cứu Kết Quả Phản Ánh - UBND Xã Hòa Thắng{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-primary mb-2">
+            <i class="fa-solid fa-magnifying-glass me-2"></i>Tra Cứu Tiến Độ & Kết Quả Phản Ánh
+        </h3>
+        <p class="text-muted small">Nhập mã phản ánh của bạn để kiểm tra phản hồi chính thức từ UBND Xã Hòa Thắng</p>
+    </div>
+
+    <!-- FORM NHẬP MÃ TRA CỨU -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <form action="{{ url_for('search') }}" method="POST">
+            <div class="input-group input-group-lg">
+                <input type="text" name="code" class="form-control rounded-start-3 fs-6" 
+                       placeholder="Nhập mã phản ánh (Ví dụ: HT20268899)..." required>
+                <button type="submit" class="btn btn-primary fw-bold px-4 rounded-end-3">
+                    <i class="fa-solid fa-search me-1"></i> Tra Cứu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- KẾT QUẢ TRA CỨU -->
+    {% if feedback %}
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+        
+        <!-- HEADER KẾT QUẢ -->
+        <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
+            <div>
+                <span class="text-muted small d-block">Mã phản ánh:</span>
+                <span class="fs-5 fw-bold text-primary">{{ feedback.feedback_code }}</span>
+            </div>
+            <div>
+                {% if feedback.status == 'Đã xử lý' %}
+                    <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-circle-check me-1"></i> Đã xử lý hoàn thành
+                    </span>
+                {% elif feedback.status == 'Đang xử lý' %}
+                    <span class="badge bg-info text-white fs-6 px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-spinner fa-spin me-1"></i> Đang tích cực xử lý
+                    </span>
+                {% elif feedback.status == 'Từ chối' %}
+                    <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-circle-xmark me-1"></i> Từ chối xử lý
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-clock me-1"></i> Đã tiếp nhận - Chờ phân loại
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- 1. NỘI DUNG NGƯỜI DÂN ĐÃ GỬI -->
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark border-start border-4 border-primary ps-2 mb-3">Thông Tin Góp Ý / Phản Ánh</h6>
+                <div class="row g-2 mb-2 text-muted small">
+                    <div class="col-md-6"><strong>Người gửi:</strong> {{ feedback.fullname }}</div>
+                    <div class="col-md-6"><strong>Số điện thoại:</strong> {{ feedback.phone }}</div>
+                </div>
+                <h5 class="fw-bold text-dark mt-2">{{ feedback.title }}</h5>
+                <p class="text-secondary bg-light p-3 rounded-3 border mb-3" style="white-space: pre-line;">{{ feedback.content }}</p>
+
+                {% if feedback.image %}
+                <div class="mb-3">
+                    <span class="fw-bold text-muted small d-block mb-1">Hình ảnh đính kèm ban đầu:</span>
+                    <a href="{{ url_for('static', filename='uploads/' + feedback.image) }}" target="_blank">
+                        <img src="{{ url_for('static', filename='uploads/' + feedback.image) }}" 
+                             alt="Ảnh đính kèm" class="rounded border shadow-sm" style="max-height: 180px;">
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 2. KHỐI KẾT QUẢ GIẢI QUYẾT TỪ CHÍNH QUYỀN (ĐÂY LÀ PHẦN NGƯỜI DÂN CẦN XEM) -->
+            <div class="border-top pt-4">
+                <h6 class="fw-bold text-success border-start border-4 border-success ps-2 mb-3">
+                    <i class="fa-solid fa-building-user me-1"></i> Kết Quả Xử Lý Từ UBND Xã Hòa Thắng
+                </h6>
+
+                {% if feedback.response_content %}
+                    <div class="alert alert-success border-0 bg-success bg-opacity-10 p-3 rounded-3 text-dark">
+                        <p class="mb-0 fs-6" style="white-space: pre-line;">{{ feedback.response_content }}</p>
+                    </div>
+                {% else %}
+                    <div class="alert alert-light border text-muted p-3 rounded-3 text-center mb-0">
+                        <i class="fa-solid fa-hourglass-half me-1"></i> 
+                        Chính quyền đang tiến hành kiểm tra, xác minh và xử lý. Kết quả chi tiết sẽ được cập nhật tại đây.
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="card-footer bg-light text-center py-3">
+            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Quay về Trang chủ
+            </a>
+        </div>
+    </div>
+    {% elif request.method == 'POST' %}
+    <!-- THÔNG BÁO KHÔNG TÌM THẤY -->
+    <div class="alert alert-danger text-center rounded-4 shadow-sm p-4">
+        <i class="fa-solid fa-triangle-exclamation fa-2x mb-2 d-block"></i>
+        <h5 class="fw-bold">Không tìm thấy mã phản ánh!</h5>
+        <p class="mb-0 small">Vui lòng kiểm tra lại mã phản ánh chính xác hoặc liên hệ trực tiếp với bộ phận tiếp dân.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Thành công
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+<div class="alert alert-success text-center">
+
+<h2>
+
+🎉 Gửi góp ý thành công
+
+</h2>
+
+<hr>
+
+<h4>
+
+Mã góp ý của bạn
+
+</h4>
+
+<h1 class="text-primary">
+
+{{ code }}
+
+</h1>
+
+<p>
+
+Vui lòng lưu mã này để tra cứu kết quả.
+
+</p>
+
+<a
+href="/"
+
+class="btn btn-primary">
+
+Trang chủ
+
+</a>
+
+</div>
+
+</div>
+
+{% endblock %}

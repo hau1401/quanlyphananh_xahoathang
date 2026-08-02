@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Tin tức & Thông báo - UBND Xã Hòa Thắng{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-primary fw-bold mb-1">Tin Tức & Thông Báo</h2>
+        <p class="text-muted mb-0">Cập nhật tin tức hoạt động và thông báo mới nhất từ địa phương</p>
+    </div>
+</div>
+
+<!-- Tin nổi bật -->
+<div class="card shadow-sm border-0 mb-5 overflow-hidden">
+    <div class="row g-0">
+        <!-- Khung chứa ảnh (Đã sửa lại thẻ <img> chuẩn) -->
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='image/news1.jpg') }}" 
+                 class="img-fluid rounded-start h-100 w-100" 
+                 style="object-fit: cover; min-height: 250px;" 
+                 alt="Kế hoạch triển khai dịch vụ công">
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card-body p-4">
+                <span class="badge bg-danger mb-2">Thông báo quan trọng</span>
+                <h4 class="card-title fw-bold">Kế hoạch triển khai dịch vụ công trực tuyến năm 2026</h4>
+                <p class="card-text text-muted">
+                    UBND xã Hòa Thắng thông báo đẩy mạnh tiếp nhận hồ sơ và trả kết quả thủ tục hành chính qua cổng dịch vụ công quốc gia...
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted">📅 01/08/2026</small>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Đọc tiếp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách tin tức -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <span class="badge bg-primary mb-2">Hoạt động địa phương</span>
+                <h5 class="card-title fw-bold">Tuyên truyền công tác an toàn giao thông trên địa bàn xã</h5>
+                <p class="card-text text-muted small">
+                    Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ...
+                </p>
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
+                <small class="text-muted">📅 28/07/2026</small>
+                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <span class="badge bg-success mb-2">Cải cách hành chính</span>
+                <h5 class="card-title fw-bold">Cập nhật lịch tiếp công dân định kỳ của Chủ tịch UBND xã</h5>
+                <p class="card-text text-muted small">
+                    Thông báo thời gian và địa điểm tiếp công dân định kỳ hàng tháng của lãnh đạo UBND xã Hòa Thắng...
+                </p>
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
+                <small class="text-muted">📅 25/07/2026</small>
+                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <span class="badge bg-warning text-dark mb-2">Khuyến nông</span>
+                <h5 class="card-title fw-bold">Hướng dẫn phòng trừ sâu bệnh mùa mưa cho cây trồng</h5>
+                <p class="card-text text-muted small">
+                    Khuyến cáo bà con nông dân chủ động kiểm tra vườn cây, ứng phó với tình hình thời tiết diễn biến phức tạp...
+                </p>
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
+                <small class="text-muted">📅 20/07/2026</small>
+                <a href="#" class="btn btn-link btn-sm text-decoration-none">Chi tiết →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

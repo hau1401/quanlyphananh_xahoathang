@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Trang Quản Trị Hệ Thống - UBND Xã Hòa Thắng{% endblock %}
+
+{% block content %}
+<!-- Nhúng thư viện SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container-fluid py-2">
+
+    <!-- TIÊU ĐỀ TRANG DASHBOARD -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="fa-solid fa-gauge-high me-2"></i>Bảng Điều Khiển Quản Trị</h3>
+            <p class="text-muted small mb-0">Hệ thống tiếp nhận, phân loại và xử lý phản ánh kiến nghị người dân</p>
+        </div>
+        <span class="badge bg-danger fs-6 px-3 py-2"><i class="fa-solid fa-user-shield me-1"></i> Quyền: ADMIN</span>
+    </div>
+
+    <!-- 1. THỐNG KÊ TỔNG QUAN (CARDS) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm border-0">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase small mb-1">Tổng Phản Ánh</h6>
+                        <h2 class="fw-bold mb-0">{{ total_feedbacks }}</h2>
+                    </div>
+                    <i class="fa-solid fa-comments fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow-sm border-0">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase small mb-1">Chờ Tiếp Nhận</h6>
+                        <h2 class="fw-bold mb-0">{{ pending_count }}</h2>
+                    </div>
+                    <i class="fa-solid fa-clock fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow-sm border-0">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase small mb-1">Đang Xử Lý</h6>
+                        <h2 class="fw-bold mb-0">{{ processing_count }}</h2>
+                    </div>
+                    <i class="fa-solid fa-spinner fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm border-0">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase small mb-1">Đã Hoàn Thành</h6>
+                        <h2 class="fw-bold mb-0">{{ completed_count }}</h2>
+                    </div>
+                    <i class="fa-solid fa-circle-check fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. THANH ĐIỀU HƯỚNG TAB CHỨC NĂNG -->
+    <ul class="nav nav-tabs nav-fill mb-3 fw-bold" id="adminTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="feedbacks-tab" data-bs-toggle="tab" data-bs-target="#feedbacks" type="button" role="tab">
+                <i class="fa-solid fa-list-check me-2"></i>Quản Lý Phản Ánh
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                <i class="fa-solid fa-users me-2"></i>Quản Lý Tài Khoản ({{ total_users }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">
+                <i class="fa-solid fa-layer-group me-2"></i>Danh Mục Lĩnh Vực
+            </button>
+        </li>
+    </ul>
+
+    <!-- NỘI DUNG CÁC TAB -->
+    <div class="tab-content bg-white p-3 rounded shadow-sm border" id="adminTabContent">
+        
+        <!-- TAB 1: QUẢN LÝ PHẢN ÁNH -->
+        <div class="tab-pane fade show active" id="feedbacks" role="tabpanel">
+            <h5 class="fw-bold mb-3 text-secondary">Danh sách phản ánh, kiến nghị từ nhân dân</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã PA</th>
+                            <th>Người gửi</th>
+                            <th style="width: 25%;">Tiêu đề & Nội dung</th>
+                            <th>Hình ảnh</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fb in feedbacks %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ fb.feedback_code }}</td>
+                            <td>
+                                <div><strong>{{ fb.fullname }}</strong></div>
+                                <small class="text-muted">{{ fb.phone }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ fb.title }}</div>
+                                <small class="text-muted d-block text-truncate" style="max-width: 250px;">
+                                    {{ fb.content }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if fb.image %}
+                                    <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
+                                        <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" alt="Ảnh phản ánh" class="rounded border shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">Không có ảnh</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if fb.status == 'Đã tiếp nhận' %}
+                                    <span class="badge bg-warning text-dark">Đã tiếp nhận</span>
+                                {% elif fb.status == 'Đang xử lý' %}
+                                    <span class="badge bg-info">Đang xử lý</span>
+                                {% elif fb.status == 'Đã xử lý' %}
+                                    <span class="badge bg-success">Đã xử lý</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ fb.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <!-- Nút Mở Modal Xem Chi Tiết & Cập Nhật -->
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateModal{{ fb.id }}">
+                                        <i class="fa-solid fa-eye me-1"></i>Xem & Xử lý
+                                    </button>
+                                    
+                                    <!-- Form Xóa Phản Ánh Với SweetAlert2 -->
+                                    <form id="delete-feedback-form-{{ fb.id }}" action="{{ url_for('delete_feedback', feedback_id=fb.id) }}" method="POST" class="d-inline">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-feedback-form-{{ fb.id }}', 'phản ánh này')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- MODAL CHI TIẾT & CẬP NHẬT PHẢN ÁNH -->
+                                <div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi Tiết Phản Ánh #{{ fb.feedback_code }}</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- THÔNG TIN NGƯỜI GỬI -->
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-md-6">
+                                                            <p class="mb-1"><strong>Người gửi:</strong> {{ fb.fullname }}</p>
+                                                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ fb.phone }}</p>
+                                                            <p class="mb-1"><strong>Email:</strong> {{ fb.email or 'Không có' }}</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <p class="mb-1"><strong>Địa chỉ:</strong> {{ fb.address or 'Không cung cấp' }}</p>
+                                                            <p class="mb-1"><strong>Mã phản ánh:</strong> <span class="text-primary fw-bold">{{ fb.feedback_code }}</span></p>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    
+                                                    <!-- NỘI DUNG PHẢN ÁNH -->
+                                                    <div class="mb-3">
+                                                        <h6 class="fw-bold text-dark">Tiêu đề: {{ fb.title }}</h6>
+                                                        <label class="form-label fw-bold">Nội dung phản ánh đầy đủ:</label>
+                                                        <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
+                                                    </div>
+
+                                                    <!-- HIỂN THỊ HÌNH ẢNH TRONG MODAL -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold d-block">Hình ảnh đính kèm:</label>
+                                                        {% if fb.image %}
+                                                            <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
+                                                                <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;" alt="Hình ảnh đính kèm">
+                                                            </a>
+                                                            <small class="d-block text-muted mt-1">(Nhấp vào ảnh để mở xem kích thước đầy đủ)</small>
+                                                        {% else %}
+                                                            <p class="text-muted fst-italic mb-0">Người dân không gửi kèm hình ảnh.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <hr>
+
+                                                    <!-- FORM CẬP NHẬT CỦA ADMIN -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Trạng thái xử lý:</label>
+                                                        <select name="status" class="form-select">
+                                                            <option value="Đã tiếp nhận" {% if fb.status == 'Đã tiếp nhận' %}selected{% endif %}>Đã tiếp nhận</option>
+                                                            <option value="Đang xử lý" {% if fb.status == 'Đang xử lý' %}selected{% endif %}>Đang xử lý</option>
+                                                            <option value="Đã xử lý" {% if fb.status == 'Đã xử lý' %}selected{% endif %}>Đã xử lý (Hoàn thành)</option>
+                                                            <option value="Từ chối" {% if fb.status == 'Từ chối' %}selected{% endif %}>Từ chối xử lý</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Nội dung phản hồi từ chính quyền:</label>
+                                                        <textarea name="response_content" class="form-control" rows="3" placeholder="Nhập nội dung kết quả xử lý hoặc hướng giải quyết...">{{ fb.response_content or '' }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                                    <button type="submit" class="btn btn-success fw-bold">Lưu thay đổi</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">Chưa có phản ánh nào trong hệ thống.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: QUẢN LÝ TÀI KHOẢN -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <h5 class="fw-bold mb-3 text-secondary">Danh sách tài khoản người dùng & cán bộ</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ và Tên</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Chức vụ / Quyền</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td class="fw-bold">{{ u.fullname }}</td>
+                            <td><code>{{ u.username }}</code></td>
+                            <td>
+                                {% if u.role == 'admin' %}
+                                    <span class="badge bg-danger">ADMIN</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Cán bộ / Nhân viên</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u.id != session.get('user_id') %}
+                                <div class="d-flex gap-2">
+                                    <form action="{{ url_for('change_user_role', user_id=u.id) }}" method="POST" class="d-flex gap-1">
+                                        <select name="role" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="staff" {% if u.role == 'staff' %}selected{% endif %}>Staff</option>
+                                            <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
+                                    </form>
+
+                                    <!-- Form Xóa Tài Khoản Với SweetAlert2 -->
+                                    <form id="delete-user-form-{{ u.id }}" action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" class="d-inline">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-user-form-{{ u.id }}', 'tài khoản này')">
+                                            <i class="fa-solid fa-user-xmark"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                    <span class="text-muted small"><i>(Tài khoản hiện tại)</i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: QUẢN LÝ DANH MỤC -->
+        <div class="tab-pane fade" id="categories" role="tabpanel">
+            <div class="row">
+                <div class="col-md-5 mb-3">
+                    <div class="card border p-3 bg-light">
+                        <h6 class="fw-bold text-primary mb-3">Thêm lĩnh vực phản ánh mới</h6>
+                        <form action="{{ url_for('add_category') }}" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Tên lĩnh vực / Danh mục:</label>
+                                <input type="text" name="name" class="form-control" placeholder="Ví dụ: Đất đai, Môi trường..." required>
+                            </div>
+                            <button type="submit" class="btn btn-success fw-bold w-100"><i class="fa-solid fa-plus me-1"></i> Thêm mới</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <h6 class="fw-bold text-secondary mb-3">Danh sách các lĩnh vực hiện có</h6>
+                    <ul class="list-group">
+                        {% for cat in categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-folder me-2 text-warning"></i> {{ cat.name }}</span>
+                            
+                            <!-- Form Xóa Danh Mục Với SweetAlert2 -->
+                            <form id="delete-cat-form-{{ cat.id }}" action="{{ url_for('delete_category', cat_id=cat.id) }}" method="POST" class="d-inline">
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="confirmDelete('delete-cat-form-{{ cat.id }}', 'danh mục này')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item text-muted">Chưa có danh mục nào.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JAVASCRIPT XỬ LÝ SWEETALERT2 -->
+<script>
+function confirmDelete(formId, itemTypeName) {
+    Swal.fire({
+        title: 'Xác nhận xóa?',
+        text: 'Bạn có chắc chắn muốn xóa ' + itemTypeName + ' không? Hành động này không thể hoàn tác!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmColor: '#dc3545',
+        cancelColor: '#6c757d',
+        confirmButtonText: '<i class="fa-solid fa-trash me-1"></i> Xóa ngay',
+        cancelButtonText: 'Hủy bỏ',
+        customClass: {
+            popup: 'rounded-4 shadow-lg',
+            confirmButton: 'btn btn-danger px-4 rounded-3',
+            cancelButton: 'btn btn-secondary px-4 rounded-3 me-2'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
+        }
+    });
+}
+</script>
+{% endblock %}

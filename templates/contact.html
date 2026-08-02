@@ -1,109 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Liên hệ - UBND Xã Hòa Thắng{% endblock %}
+{% block title %}Liên Hệ - UBND Xã Hòa Thắng{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-    <!-- Thông tin liên hệ -->
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4">
-                <h3 class="text-primary fw-bold mb-4">Thông Tin Liên Hệ</h3>
-                
-                <div class="d-flex mb-3">
-                    <div class="fs-4 text-primary me-3">📍</div>
+<div class="row g-4 justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-5 bg-primary text-white p-4 d-flex flex-column justify-content-between">
                     <div>
-                        <h6 class="fw-bold mb-1">Địa chỉ trụ sở:</h6>
-                        <p class="text-muted mb-0">Thôn Hồng Phong, xã Hòa Thắng, tỉnh Lâm Đồng</p>
+                        <h4 class="fw-bold mb-3"><i class="fa-solid fa-address-card me-2"></i>Thông Tin Liên Hệ</h4>
+                        <p class="small opacity-75 mb-4">Mọi thắc mắc hoặc cần hỗ trợ trực tiếp, quý công dân có thể liên hệ qua thông tin dưới đây hoặc đến trực tiếp trụ sở.</p>
+                        
+                        <div class="mb-3">
+                            <i class="fa-solid fa-location-dot me-2 text-warning"></i>
+                            <span>Địa chỉ: Xã Hòa Thắng, TP. Buôn Ma Thuột, Đắk Lắk</span>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fa-solid fa-phone me-2 text-warning"></i>
+                            <span>Điện thoại: (0262) 3855.xxx</span>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fa-solid fa-envelope me-2 text-warning"></i>
+                            <span>Email: ubndhoathang@daklak.gov.vn</span>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-top border-white border-opacity-25 small">
+                        🕒 Giờ tiếp công dân: 07:30 - 11:30 | 13:30 - 17:00
                     </div>
                 </div>
 
-                <div class="d-flex mb-3">
-                    <div class="fs-4 text-primary me-3">📞</div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Điện thoại đường dây nóng:</h6>
-                        <p class="text-muted mb-0">(+84) 33 749 5347</p>
-                    </div>
+                <div class="col-md-7 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3">Gửi Tin Nhắn Cho UBND</h5>
+                    <form action="#" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Họ và tên</label>
+                            <input type="text" class="form-control" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email / Số điện thoại</label>
+                            <input type="text" class="form-control" placeholder="Email hoặc SĐT liên hệ" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nội dung tin nhắn</label>
+                            <textarea class="form-control" rows="4" placeholder="Nhập câu hỏi hoặc yêu cầu cần giải đáp..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary fw-bold w-100">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Gửi tin nhắn
+                        </button>
+                    </form>
                 </div>
-
-                <div class="d-flex mb-3">
-                    <div class="fs-4 text-primary me-3">✉️</div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Email chính thức:</h6>
-                        <p class="text-muted mb-0">danguyhoathang@lamdong.gov.vn</p>
-                    </div>
-                </div>
-
-                <hr class="my-4">
-                <div class="alert alert-info border-0 mb-0">
-                    <small>💡 <strong>Lưu ý:</strong> Mọi phản ánh, góp ý về dịch vụ công, quý công dân vui lòng gửi qua mục <a href="{{ url_for('feedback') }}" class="alert-link">Gửi góp ý</a>.</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Form gửi thư liên hệ -->
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h3 class="text-primary fw-bold mb-3">Gửi Thư Liên Hệ</h3>
-                <p class="text-muted mb-4">Nếu bạn có câu hỏi hoặc cần hỗ trợ thông tin, hãy điền vào biểu mẫu bên dưới.</p>
-
-                <!-- Thêm id="contactForm" và onsubmit="sendContact(event)" -->
-                <form id="contactForm" onsubmit="sendContact(event)">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
-                            <input type="text" id="fullname" class="form-control" placeholder="Nguyễn Văn A" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" placeholder="09xxxxxxxx" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Địa chỉ Email</label>
-                            <input type="email" class="form-control" placeholder="example@email.com">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" placeholder="Tiêu đề thư liên hệ" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Nội dung liên hệ <span class="text-danger">*</span></label>
-                            <textarea class="form-control" rows="4" placeholder="Nhập nội dung tin nhắn..." required></textarea>
-                        </div>
-                        <div class="col-12 mt-4">
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                                🚀 Gửi liên hệ
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Script xử lý Popup hiển thị tức thì -->
-<script>
-  function sendContact(event) {
-    event.preventDefault(); // Chặn reload trang mặc định
-
-    const name = document.getElementById("fullname").value;
-
-    // Hiển thị Popup SweetAlert2 giữa màn hình
-    Swal.fire({
-      title: 'Gửi thành công!',
-      text: `Cảm ơn bạn ${name}! Thư liên hệ đã được gửi thành công. Chúng tôi sẽ phản hồi trong thời gian sớm nhất.`,
-      icon: 'success',
-      confirmButtonText: 'Đóng',
-      confirmButtonColor: '#0d6efd'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Tự động làm sạch các ô nhập liệu sau khi đóng popup
-        document.getElementById("contactForm").reset();
-      }
-    });
-  }
-</script>
 {% endblock %}

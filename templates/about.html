@@ -1,69 +1,68 @@
 {% extends "base.html" %}
 
-{% block title %}Giới thiệu - UBND Xã Hòa Thắng{% endblock %}
+{% block title %}Giới Thiệu - UBND Xã Hòa Thắng{% endblock %}
 
 {% block content %}
 <div class="row g-4">
-    <!-- Cột bên trái: Nội dung giới thiệu chính -->
-    <div class="col-lg-8">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
-                <h2 class="text-primary fw-bold mb-3">Tổng Quan Về Xã Hòa Thắng</h2>
-                <p class="lead text-muted">
-                    Xã Hòa Thắng là đơn vị hành chính thuộc tỉnh Lâm Đồng. Nơi đây sở hữu tiềm năng phát triển kinh tế, giao thông thuận lợi và đời sống văn hóa xã hội giàu bản sắc.
-                </p>
-                <hr class="my-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 p-4">
+            <h3 class="fw-bold text-primary mb-3"><i class="fa-solid fa-building-columns me-2"></i>Tổng Quan Về UBND Xã Hòa Thắng</h3>
+            <p class="text-secondary leading-relaxed">
+                Xã Hòa Thắng là đơn vị hành chính thuộc thành phố Bôn Ma Thuột, tỉnh Đắk Lắk. Với mục tiêu xây dựng một chính quyền số, phục vụ nhân dân ngày càng chuyên nghiệp, Cổng thông tin tiếp nhận & phản ánh kiến nghị được ra đời nhằm thu hẹp khoảng cách giữa chính quyền và người dân.
+            </p>
+            
+            <h5 class="fw-bold text-dark mt-4 mb-3"><i class="fa-solid fa-bullseye me-2 text-warning"></i>Nhiệm Vụ Trọng Tâm</h5>
+            <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-check text-success me-2"></i> Tiếp nhận và xử lý kịp thời các ý kiến, phản ánh của công dân về hạ tầng, an ninh.</li>
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-check text-success me-2"></i> Công khai, minh bạch quy trình giải quyết thủ tục và kiến nghị của người dân.</li>
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-check text-success me-2"></i> Nâng cao chỉ số hài lòng của người dân đối với sự phục vụ của cơ quan hành chính nhà nước.</li>
+            </ul>
 
-                <h4 class="text-dark fw-bold mb-3">1. Vị Trí Địa Lý & Điều Kiện Tự Nhiên</h4>
-                <p>
-                    Xã Hòa Thắng nằm ở phía Đông tỉnh Lâm Đồng, là cửa ngõ giao thương quan trọng có Quốc lộ 28 chạy qua, kết nối trung tâm thành phố với tỉnh Lâm Đồng và các tỉnh lân cận.
-                </p>
-
-                <h4 class="text-dark fw-bold mt-4 mb-3">2. Định Hướng Phát Triển & Cải Cách Hành Chính</h4>
-                <p>
-                    Ủy ban nhân dân Xã Hòa Thắng luôn đặt mục tiêu **"Lấy người dân làm trung tâm phục vụ"**. Hệ thống tiếp nhận góp ý và phản ánh trực tuyến được xây dựng nhằm:
-                </p>
-                <ul class="list-group list-group-flush mb-3">
-                    <li class="list-group-item bg-transparent">✓ Tăng cường tính công khai, minh bạch trong quản lý nhà nước.</li>
-                    <li class="list-group-item bg-transparent">✓ Lắng nghe và xử lý kịp thời các kiến nghị, vướng mắc của nhân dân.</li>
-                    <li class="list-group-item bg-transparent">✓ Đẩy mạnh chuyển đổi số và cải cách thủ tục hành chính tại địa phương.</li>
-                </ul>
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-users me-2 text-info"></i>Sơ Đồ Bộ Máy Tổ Chức</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Chức danh</th>
+                            <th>Họ và tên</th>
+                            <th>Lĩnh vực phụ trách</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Chủ tịch UBND</td>
+                            <td>Nguyễn Văn A</td>
+                            <td>Quản lý chung, Kinh tế - Xã hội</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Phó Chủ tịch UBND</td>
+                            <td>Trần Thị B</td>
+                            <td>Văn hóa - Xã hội, Chính sách</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Cán bộ Địa chính - Môi trường</td>
+                            <td>Lê Văn C</td>
+                            <td>Đất đai, Xây dựng, Môi trường</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Cột bên phải: Ban lãnh đạo & Giờ làm việc -->
-    <div class="col-lg-4">
-        <div class="card shadow-sm border-0 mb-4 bg-primary text-white">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">⏰ Giờ Làm Việc</h5>
-                <p class="mb-2"><strong>Thứ Hai - Thứ Sáu:</strong></p>
-                <ul class="list-unstyled ms-3 mb-3">
-                    <li>• Sáng: 07:30 - 11:30</li>
-                    <li>• Chiều: 13:30 - 17:00</li>
-                </ul>
-                <p class="mb-0"><strong>Thứ Bảy, Chủ Nhật & Ngày lễ:</strong> Nghỉ</p>
+    <!-- SIDEBAR THÔNG TIN ĐƯỜNG DÂY NÓNG -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 p-3 bg-white">
+            <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-phone-volume me-2"></i>Đường Dây Nóng Khẩn Cấp</h5>
+            <div class="p-3 bg-danger bg-opacity-10 border border-danger rounded mb-3">
+                <small class="text-muted d-block">Trực ban Công an xã:</small>
+                <a href="tel:02623855113" class="fs-5 fw-bold text-danger text-decoration-none">02623.855.113</a>
             </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h5 class="fw-bold text-primary mb-3">Bộ Máy Quản Lý</h5>
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-light p-2 rounded-circle me-3">🏛️</div>
-                    <div>
-                        <h6 class="mb-0 fw-bold">HĐND Xã Hòa Thắng</h6>
-                        <small class="text-muted">Cơ quan quyền lực nhà nước ở địa phương</small>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="bg-light p-2 rounded-circle me-3">🏢</div>
-                    <div>
-                        <h6 class="mb-0 fw-bold">UBND Xã Hòa Thắng</h6>
-                        <small class="text-muted">Cơ quan chấp hành HĐND</small>
-                    </div>
-                </div>
+            <div class="p-3 bg-primary bg-opacity-10 border border-primary rounded mb-3">
+                <small class="text-muted d-block">Văn phòng UBND xã:</small>
+                <a href="tel:02623855114" class="fs-5 fw-bold text-primary text-decoration-none">02623.855.114</a>
             </div>
+            <p class="small text-muted mb-0"><i class="fa-solid fa-clock me-1"></i> Thời gian làm việc: Giờ hành chính từ Thứ 2 đến Thứ 6 hàng tuần.</p>
         </div>
     </div>
 </div>

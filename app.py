@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
+from sqlalchemy import text
 
 from config import Config
 from models import db, Category, Feedback, User
@@ -20,9 +21,25 @@ app.config['MAX_CONTENT_LENGTH'] = 75 * 1024 * 1024
 
 db.init_app(app)
 
+# 🔥 TỰ ĐỘNG TẠO BẢNG, VÁ CỘT MỚI (CHỐNG LỖI 500) & KHỞI TẠO ADMIN
 with app.app_context():
     db.create_all()
     
+    # 🛠️ Tự động cập nhật các cột mới vào CSDL nếu bảng cũ chưa có
+    with db.engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN media_files TEXT;"))
+            conn.commit()
+        except Exception:
+            pass
+
+        try:
+            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN latitude FLOAT;"))
+            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN longitude FLOAT;"))
+            conn.commit()
+        except Exception:
+            pass
+
     admin_user = User.query.filter_by(username="admin").first()
     if not admin_user:
         admin_user = User(
@@ -56,11 +73,11 @@ UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Các đuôi file cho phép
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mkv'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # ==========================================
 # DECORATORS BẢO MẬT & PHÂN QUYỀN
@@ -95,6 +112,7 @@ def generate_feedback_code():
     year = datetime.now().year
     number = random.randint(1000, 9999)
     return f"HT{year}{number}"
+
 
 # ==========================================
 # 1. TRANG CHỦ, GÓP Ý & TRA CỨU
@@ -131,7 +149,6 @@ def feedback():
             flash("Số điện thoại không hợp lệ! Vui lòng chỉ nhập từ 10 đến 11 chữ số.", "danger")
             return render_template("feedback.html", categories=categories)
 
-        # 🔥 XỬ LÝ LƯU NHIỀU FILE (ẢNH & VIDEO)
         uploaded_files = request.files.getlist("media_files")
         saved_filenames = []
 
@@ -147,10 +164,9 @@ def feedback():
                     file.save(file_path)
                     saved_filenames.append(filename)
                 else:
-                    flash(f"Tệp '{file.filename}' không đúng định dạng cho phép (Ảnh: PNG, JPG, GIF | Video: MP4, MOV, AVI)!", "danger")
+                    flash(f"Tệp '{file.filename}' không đúng định dạng cho phép!", "danger")
                     return render_template("feedback.html", categories=categories)
 
-        # Ghép danh sách tên file bằng dấu phẩy
         media_files_str = ",".join(saved_filenames) if saved_filenames else None
 
         lat_val = request.form.get("latitude")
@@ -162,8 +178,8 @@ def feedback():
             phone=phone,
             email=request.form.get("email", ""),
             address=request.form.get("address", ""),
-            latitude=float(lat_val) if lat_val else None,
-            longitude=float(lng_val) if lng_val else None,
+            latitude=float(lat_val) if lat_val and lat_val.strip() else None,
+            longitude=float(lng_val) if lng_val and lng_val.strip() else None,
             category_id=request.form["category"],
             title=request.form["title"],
             content=request.form["content"],
@@ -177,19 +193,6 @@ def feedback():
         return render_template("success.html", code=fb_item.feedback_code)
 
     return render_template("feedback.html", categories=categories)
-
-
-@app.route("/search", methods=["GET", "POST"])
-@login_required
-def search():
-    fb_item = None
-    if request.method == "POST":
-        code = request.form.get("code")
-        fb_item = Feedback.query.filter_by(feedback_code=code).first()
-
-    return render_template("search.html", feedback=fb_item)
-
-# (Các route còn lại đăng nhập, admin,... giữ nguyên như cũ)
 
 
 @app.route("/search", methods=["GET", "POST"])
@@ -390,7 +393,7 @@ def delete_category(cat_id):
 
 
 # ==========================================
-# 4. CÁC TRANG TĨNH (GIỚI THIỆU, TIN TỨC, LIÊN HỆ)
+# 4. CÁC TRANG TĨNH & TÀI KHOẢN
 # ==========================================
 
 @app.route("/about")
@@ -412,10 +415,6 @@ def contact():
 
     return render_template("contact.html")
 
-
-# ==========================================
-# 5. QUẢN LÝ TÀI KHOẢN CÁ NHÂN & ĐỔI MẬT KHẨU
-# ==========================================
 
 @app.route("/profile")
 @login_required
@@ -440,7 +439,6 @@ def update_profile():
             user.email = email
 
         db.session.commit()
-
         session["fullname"] = fullname
         flash("Cập nhật thông tin cá nhân thành công!", "success")
 
@@ -467,7 +465,7 @@ def change_password():
     user.password = new_password
     db.session.commit()
 
-    flash("Đổi mật khẩu thành công! Vui lòng dùng mật khẩu mới cho lần đăng nhập sau.", "success")
+    flash("Đổi mật khẩu thành công!", "success")
     return redirect(url_for("profile"))
 
 
@@ -509,7 +507,6 @@ def reset_password():
         if user:
             user.password = new_password
             db.session.commit()
-
             session.pop("reset_user_id", None)
 
             flash("Đặt lại mật khẩu thành công! Vui lòng đăng nhập.", "success")
@@ -518,8 +515,5 @@ def reset_password():
     return render_template("reset_password.html")
 
 
-# ==========================================
-# KHỞI CHẠY ỨNG DỤNG
-# ==========================================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

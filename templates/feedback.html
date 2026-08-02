@@ -159,7 +159,6 @@ Gửi góp ý & Phản ánh
                             
                             <!-- Khung xem trước các tập tin đã chọn -->
                             <div id="mediaPreviewContainer" class="row g-2 mt-3 d-none">
-                                <!-- JS sẽ render ảnh/video xem trước vào đây -->
                             </div>
                         </div>
 
@@ -243,7 +242,7 @@ Gửi góp ý & Phản ánh
     function previewMedia(event) {
         const input = event.target;
         const container = document.getElementById('mediaPreviewContainer');
-        container.innerHTML = ''; // Xóa xem trước cũ
+        container.innerHTML = ''; 
 
         if (input.files && input.files.length > 0) {
             if (input.files.length > 5) {
@@ -255,7 +254,7 @@ Gửi góp ý & Phản ánh
 
             container.classList.remove('d-none');
 
-            Array.from(input.files).forEach((file, index) => {
+            Array.from(input.files).forEach((file) => {
                 const col = document.createElement('div');
                 col.className = 'col-6 col-md-4 text-center';
 

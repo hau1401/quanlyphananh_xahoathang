@@ -34,7 +34,7 @@ class Feedback(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     
-    # 🎥 🖼️ Lưu danh sách file (ảnh/video) phân cách bằng dấu phẩy
+    # 🎥 🖼️ Lưu danh sách các tên file (ảnh/video) phân cách bằng dấu phẩy
     media_files = db.Column(db.Text, nullable=True)
     
     status = db.Column(db.String(50), default="Đã tiếp nhận")

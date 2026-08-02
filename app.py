@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
-from sqlalchemy import text
+from sqlalchemy import text,inspect
 
 from config import Config
 from models import db, Category, Feedback, User
@@ -25,21 +25,23 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
-    # 🛠️ Tự động cập nhật các cột mới vào CSDL nếu bảng cũ chưa có
-    with db.engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN media_files TEXT;"))
-            conn.commit()
-        except Exception:
-            pass
+    # 🛠️ KIỂM TRA VÀ BỔ SUNG CỘT MỚI MỘT CÁCH AN TOÀN
+    inspector = inspect(db.engine)
+    if inspector.has_table("feedbacks"):
+        existing_columns = [col['name'] for col in inspector.get_columns("feedbacks")]
+        
+        with db.engine.connect() as conn:
+            if "media_files" not in existing_columns:
+                conn.execute(text("ALTER TABLE feedbacks ADD COLUMN media_files TEXT;"))
+                conn.commit()
+            if "latitude" not in existing_columns:
+                conn.execute(text("ALTER TABLE feedbacks ADD COLUMN latitude FLOAT;"))
+                conn.commit()
+            if "longitude" not in existing_columns:
+                conn.execute(text("ALTER TABLE feedbacks ADD COLUMN longitude FLOAT;"))
+                conn.commit()
 
-        try:
-            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN latitude FLOAT;"))
-            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN longitude FLOAT;"))
-            conn.commit()
-        except Exception:
-            pass
-
+    # Khởi tạo tài khoản Admin
     admin_user = User.query.filter_by(username="admin").first()
     if not admin_user:
         admin_user = User(

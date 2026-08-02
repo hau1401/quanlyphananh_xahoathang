@@ -3,8 +3,10 @@
 {% block title %}Trang Quản Trị Hệ Thống - UBND Xã Hòa Thắng{% endblock %}
 
 {% block content %}
-<!-- Nhúng thư viện SweetAlert2 -->
+<!-- Nhúng thư viện SweetAlert2 & Leaflet Maps -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
   /* Fix lỗi bị đơ, treo cuộn trang trên giao diện di động khi bật Modal */
@@ -113,7 +115,7 @@
                             <th>Mã PA</th>
                             <th>Người gửi</th>
                             <th style="width: 25%;">Tiêu đề & Nội dung</th>
-                            <th>Hình ảnh</th>
+                            <th>Đính kèm</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
@@ -133,12 +135,18 @@
                                 </small>
                             </td>
                             <td>
-                                {% if fb.image %}
-                                    <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
-                                        <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" alt="Ảnh phản ánh" class="rounded border shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
-                                    </a>
+                                <!-- XỬ LÝ HIỂN THỊ CỘT ĐÍNH KÈM (ẢNH & VIDEO) -->
+                                {% if fb.media_files %}
+                                    {% set file_list = fb.media_files.split(',') %}
+                                    <span class="badge bg-primary text-white">
+                                        <i class="fa-solid fa-paperclip me-1"></i>{{ file_list|length }} tệp
+                                    </span>
+                                {% elif fb.image %}
+                                    <span class="badge bg-primary text-white">
+                                        <i class="fa-solid fa-image me-1"></i>1 tệp
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-light text-muted border">Không có ảnh</span>
+                                    <span class="badge bg-light text-muted border">Không có</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -275,11 +283,11 @@
 </div>
 
 <!-- ========================================== -->
-<!-- DANH SÁCH MODAL (ĐẶT NGOÀI TABLE ĐỂ DỄ BẤM TRÊN DI ĐỘNG) -->
+<!-- DANH SÁCH MODAL XEM CHI TIẾT & XỬ LÝ -->
 <!-- ========================================== -->
 {% for fb in feedbacks %}
 <div class="modal fade" id="updateModal{{ fb.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <form action="{{ url_for('update_feedback_status', feedback_id=fb.id) }}" method="POST">
                 <div class="modal-header bg-primary text-white">
@@ -297,6 +305,11 @@
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Địa chỉ:</strong> {{ fb.address or 'Không cung cấp' }}</p>
                             <p class="mb-1"><strong>Mã phản ánh:</strong> <span class="text-primary fw-bold">{{ fb.feedback_code }}</span></p>
+                            {% if fb.latitude and fb.longitude %}
+                                <p class="mb-1 text-success fw-bold">
+                                    <i class="fa-solid fa-location-dot me-1"></i> Tọa độ GPS: {{ fb.latitude|round(5) }}, {{ fb.longitude|round(5) }}
+                                </p>
+                            {% endif %}
                         </div>
                     </div>
                     <hr>
@@ -308,16 +321,47 @@
                         <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line;">{{ fb.content }}</div>
                     </div>
 
-                    <!-- HIỂN THỊ HÌNH ẢNH TRONG MODAL -->
+                    <!-- HIỂN THỊ ĐA PHƯƠNG TIỆN ĐÍNH KÈM (ẢNH VÀ VIDEO) -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold d-block">Hình ảnh đính kèm:</label>
-                        {% if fb.image %}
-                            <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
-                                <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px; width: 100%; object-fit: contain;" alt="Hình ảnh đính kèm">
-                            </a>
-                            <small class="d-block text-muted mt-1">(Nhấp vào ảnh để mở xem kích thước đầy đủ)</small>
+                        <label class="form-label fw-bold d-block">Tệp đính kèm (Ảnh / Video minh chứng):</label>
+                        
+                        {% if fb.media_files %}
+                            {% set file_list = fb.media_files.split(',') %}
+                            <div class="row g-2 mt-1">
+                                {% for file_name in file_list %}
+                                    <div class="col-6 col-md-4 text-center">
+                                        <div class="card h-100 p-2 shadow-sm border">
+                                            {% set ext = file_name.rsplit('.', 1)[-1].lower() %}
+                                            {% if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp'] %}
+                                                <a href="{{ url_for('static', filename='uploads/' + file_name) }}" target="_blank">
+                                                    <img src="{{ url_for('static', filename='uploads/' + file_name) }}" 
+                                                         class="img-fluid rounded" 
+                                                         style="max-height: 120px; object-fit: cover; width: 100%;" 
+                                                         alt="Hình ảnh đính kèm">
+                                                </a>
+                                            {% elif ext in ['mp4', 'mov', 'avi', 'mkv'] %}
+                                                <video controls class="w-100 rounded" style="max-height: 120px;">
+                                                    <source src="{{ url_for('static', filename='uploads/' + file_name) }}" type="video/{{ ext if ext != 'mov' else 'mp4' }}">
+                                                    Trình duyệt không hỗ trợ phát video.
+                                                </video>
+                                            {% else %}
+                                                <a href="{{ url_for('static', filename='uploads/' + file_name) }}" target="_blank" class="btn btn-sm btn-outline-secondary my-3">
+                                                    <i class="fa-solid fa-file me-1"></i> Tải về tệp
+                                                </a>
+                                            {% endif %}
+                                            <small class="text-muted d-block text-truncate mt-1" style="font-size: 0.75rem;">{{ file_name }}</small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif fb.image %}
+                            <div class="mt-1">
+                                <a href="{{ url_for('static', filename='uploads/' + fb.image) }}" target="_blank">
+                                    <img src="{{ url_for('static', filename='uploads/' + fb.image) }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px; object-fit: contain;" alt="Hình ảnh đính kèm">
+                                </a>
+                            </div>
                         {% else %}
-                            <p class="text-muted fst-italic mb-0">Người dân không gửi kèm hình ảnh.</p>
+                            <p class="text-muted fst-italic mb-0">Người dân không gửi kèm ảnh/video.</p>
                         {% endif %}
                     </div>
                     <hr>

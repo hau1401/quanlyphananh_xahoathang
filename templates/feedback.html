@@ -48,15 +48,18 @@ Gửi góp ý & Phản ánh
 
                         <!-- SĐT -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Số điện thoại <span class="text-danger">*</span>
-                            </label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                class="form-control form-control-lg"
-                                placeholder="Nhập số điện thoại (ví dụ: 0912345678)"
-                                required>
+                            <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" 
+                                class="form-control" 
+                                id="phone" 
+                                name="phone" 
+                                placeholder="Ví dụ: 0912345678" 
+                                required 
+                                pattern="[0-9]{10,11}" 
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                title="Vui lòng nhập đúng số điện thoại (10 - 11 chữ số)">
+                            </input>
                         </div>
 
                         <!-- Email -->

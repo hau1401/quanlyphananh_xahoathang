@@ -104,9 +104,14 @@ def feedback():
     categories = Category.query.all()
 
     if request.method == "POST":
-        filename = ""
+        phone = request.form.get("phone", "").strip()
 
-        # Xử lý file ảnh được tải lên từ form
+        # 🔥 Bắt buộc số điện thoại chỉ chứa chữ số và có độ dài từ 10-11 số
+        if not phone.isdigit() or not (10 <= len(phone) <= 11):
+            flash("Số điện thoại không hợp lệ! Vui lòng chỉ nhập từ 10 đến 11 chữ số.", "danger")
+            return render_template("feedback.html", categories=categories)
+
+        filename = ""
         if "image" in request.files:
             file = request.files["image"]
             if file and file.filename != "":
@@ -117,7 +122,7 @@ def feedback():
         fb_item = Feedback(
             feedback_code=generate_feedback_code(),
             fullname=request.form["fullname"],
-            phone=request.form["phone"],
+            phone=phone,
             email=request.form.get("email", ""),
             address=request.form.get("address", ""),
             category_id=request.form["category"],

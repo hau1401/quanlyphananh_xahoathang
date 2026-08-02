@@ -144,10 +144,20 @@
                             <i class="fa-solid fa-rotate-left me-1"></i> Xóa lọc
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <a href="{{ url_for('export_excel') }}" class="btn btn-success fw-bold">
+                    <div class="mb-3">
+                        <!-- Nút Xuất Excel đã bổ sung target="_blank" -->
+                        <a href="{{ url_for('export_excel') }}" target="_blank" class="btn btn-success fw-bold">
                             <i class="fa-solid fa-file-excel me-2"></i>Xuất Báo Cáo Excel
                         </a>
+
+                        <!-- Dòng hướng dẫn nhỏ hiển thị bên dưới -->
+                        <div class="form-text text-muted mt-2">
+                            <small>
+                                <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+                                <strong>Mẹo trên di động:</strong> Nếu không tải được file khi dùng app Google hoặc Zalo, vui lòng bấm vào dấu <strong>3 chấm (...)</strong> ở góc màn hình và chọn <strong>"Mở bằng Safari / Chrome"</strong>.
+                            </small>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>

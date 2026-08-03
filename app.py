@@ -96,7 +96,7 @@ with app.app_context():
         for cat_name in default_categories:
             db.session.add(Category(name=cat_name))
 
-    # Khởi tạo Tin Tức Mẫu nếu chưa có
+    # Khởi tạo Tin Tức Mẫu nếu chưa có (Dùng ảnh trực tuyến chống mất ảnh khi restart Render)
     if News.query.count() == 0:
         sample_news = [
             News(
@@ -104,7 +104,7 @@ with app.app_context():
                 summary="UBND xã Hòa Thắng thông báo đẩy mạnh tiếp nhận hồ sơ và trả kết quả thủ tục hành chính qua cổng dịch vụ công quốc gia...",
                 content="Nhằm nâng cao chất lượng phục vụ người dân và doanh nghiệp, UBND xã Hòa Thắng triển khai tiếp nhận 100% thủ tục hành chính đủ điều kiện lên Dịch vụ công trực tuyến toàn trình.\n\nNgười dân có thể truy cập cổng Dịch vụ công Quốc gia hoặc liên hệ Bộ phận Một cửa xã Hòa Thắng để được bộ phận cán bộ hỗ trợ và hướng dẫn chi tiết.",
                 category="Thông báo quan trọng",
-                image="news1.jpg",
+                image="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80",
                 is_featured=True
             ),
             News(
@@ -112,6 +112,7 @@ with app.app_context():
                 summary="Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ...",
                 content="Đoàn thanh niên xã phối hợp với lực lượng công an tổ chức buổi tuyên truyền Luật Giao thông đường bộ cho học sinh và bà con nhân dân trên địa bàn.\n\nBuổi tuyên truyền tập trung phổ biến các quy định về việc chấp hành đội mũ bảo hiểm, không sử dụng rượu bia khi tham gia giao thông và chú ý quan sát tại các điểm giao cắt giao thông trọng điểm.",
                 category="Hoạt động địa phương",
+                image="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80",
                 is_featured=False
             )
         ]
@@ -205,13 +206,11 @@ def feedback():
             if file and file.filename != "":
                 if allowed_file(file.filename):
                     try:
-                        # ⚡ Upload trực tiếp tệp từ máy người dùng lên Cloudinary
                         upload_result = cloudinary.uploader.upload(
                             file,
                             folder="phan_anh_hoa_thang",
                             resource_type="auto"
                         )
-                        # Lấy đường dẫn HTTPS trực tuyến cố định
                         saved_urls.append(upload_result.get('secure_url'))
                     except Exception as e:
                         flash(f"Lỗi tải file {file.filename} lên Cloudinary: {str(e)}", "danger")
@@ -365,7 +364,6 @@ def dashboard():
     )
 
 
-# 🟢 ROUTE MỚI: XUẤT FILE EXCEL CHUẨN TỪ SERVER (HOẠT ĐỘNG TỐT TRÊN CẢ MOBILE & PC)
 @app.route("/export-excel")
 @admin_required
 def export_excel():
@@ -486,7 +484,6 @@ def delete_category(cat_id):
     return redirect(url_for("dashboard"))
 
 
-# Quản lý Tin Tức cho Admin (Tải ảnh đại diện tin tức lên Cloudinary)
 @app.route("/admin/news/add", methods=["POST"])
 @admin_required
 def add_news():

@@ -16,12 +16,13 @@
     <div class="row g-0">
         <div class="col-md-6">
             {% if featured_news.image %}
-                <img src="{{ url_for('static', filename='uploads/' + featured_news.image) if 'news_' in featured_news.image else url_for('static', filename='image/' + featured_news.image) }}" 
-                     class="img-fluid rounded-start h-100 w-100" 
-                     style="object-fit: cover; min-height: 250px;" 
-                     alt="{{ featured_news.title }}">
+                {% if featured_news.image.startswith('http://') or featured_news.image.startswith('https://') %}
+                    <img src="{{ featured_news.image }}" class="img-fluid rounded-start h-100 w-100" style="object-fit: cover; min-height: 250px;" alt="{{ featured_news.title }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + featured_news.image) if 'news_' in featured_news.image else url_for('static', filename='image/' + featured_news.image) }}" class="img-fluid rounded-start h-100 w-100" style="object-fit: cover; min-height: 250px;" alt="{{ featured_news.title }}">
+                {% endif %}
             {% else %}
-                <img src="{{ url_for('static', filename='image/news1.jpg') }}" class="img-fluid rounded-start h-100 w-100" style="object-fit: cover; min-height: 250px;" alt="Hình ảnh mặc định">
+                <img src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded-start h-100 w-100" style="object-fit: cover; min-height: 250px;" alt="Hình ảnh mặc định">
             {% endif %}
         </div>
         
@@ -33,7 +34,7 @@
                     {{ featured_news.summary or featured_news.content[:150] }}...
                 </p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
-                    <small class="text-muted">📅 {{ featured_news.created_at.strftime('%d/%m/%Y') }}</small>
+                    <small class="text-muted">📅 {{ featured_news.created_at.strftime('%d/%m/%Y') if featured_news.created_at else '' }}</small>
                     <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalNews{{ featured_news.id }}">
                         Đọc tiếp
                     </button>
@@ -45,17 +46,18 @@
 {% endif %}
 
 <!-- DANH SÁCH TIN TỨC KHÁC -->
-<!-- DANH SÁCH TIN TỨC KHÁC -->
 <div class="row g-4">
     {% for news in other_news %}
     <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0 overflow-hidden">
-            <!-- 🖼️ BỔ SUNG THẺ ẢNH Ở ĐÂY -->
             {% if news.image %}
-                <img src="{{ url_for('static', filename='uploads/' + news.image) if 'news_' in news.image else url_for('static', filename='image/' + news.image) }}" 
-                     class="card-img-top" 
-                     style="height: 180px; object-fit: cover;" 
-                     alt="{{ news.title }}">
+                {% if news.image.startswith('http://') or news.image.startswith('https://') %}
+                    <img src="{{ news.image }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ news.title }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + news.image) if 'news_' in news.image else url_for('static', filename='image/' + news.image) }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ news.title }}">
+                {% endif %}
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ news.title }}">
             {% endif %}
 
             <div class="card-body">
@@ -66,7 +68,7 @@
                 </p>
             </div>
             <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pb-3">
-                <small class="text-muted">📅 {{ news.created_at.strftime('%d/%m/%Y') }}</small>
+                <small class="text-muted">📅 {{ news.created_at.strftime('%d/%m/%Y') if news.created_at else '' }}</small>
                 <button type="button" class="btn btn-link btn-sm text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#modalNews{{ news.id }}">
                     Chi tiết &rarr;
                 </button>
@@ -93,9 +95,13 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="mb-3 text-muted">📅 Ngày đăng: {{ featured_news.created_at.strftime('%d/%m/%Y') }} | Danh mục: <span class="badge bg-danger">{{ featured_news.category }}</span></div>
+                <div class="mb-3 text-muted">📅 Ngày đăng: {{ featured_news.created_at.strftime('%d/%m/%Y') if featured_news.created_at else '' }} | Danh mục: <span class="badge bg-danger">{{ featured_news.category }}</span></div>
                 {% if featured_news.image %}
-                    <img src="{{ url_for('static', filename='uploads/' + featured_news.image) if 'news_' in featured_news.image else url_for('static', filename='image/' + featured_news.image) }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% if featured_news.image.startswith('http://') or featured_news.image.startswith('https://') %}
+                        <img src="{{ featured_news.image }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='uploads/' + featured_news.image) if 'news_' in featured_news.image else url_for('static', filename='image/' + featured_news.image) }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% endif %}
                 {% endif %}
                 <p class="fw-bold fs-6">{{ featured_news.summary }}</p>
                 <div style="white-space: pre-line;">{{ featured_news.content }}</div>
@@ -117,9 +123,13 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="mb-3 text-muted">📅 Ngày đăng: {{ news.created_at.strftime('%d/%m/%Y') }} | Danh mục: <span class="badge bg-primary">{{ news.category }}</span></div>
+                <div class="mb-3 text-muted">📅 Ngày đăng: {{ news.created_at.strftime('%d/%m/%Y') if news.created_at else '' }} | Danh mục: <span class="badge bg-primary">{{ news.category }}</span></div>
                 {% if news.image %}
-                    <img src="{{ url_for('static', filename='uploads/' + news.image) if 'news_' in news.image else url_for('static', filename='image/' + news.image) }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% if news.image.startswith('http://') or news.image.startswith('https://') %}
+                        <img src="{{ news.image }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='uploads/' + news.image) if 'news_' in news.image else url_for('static', filename='image/' + news.image) }}" class="img-fluid rounded mb-3 w-100" style="max-height: 350px; object-fit: cover;" alt="Hình ảnh bài viết">
+                    {% endif %}
                 {% endif %}
                 <div style="white-space: pre-line;">{{ news.content }}</div>
             </div>
